@@ -22,7 +22,6 @@
         .card-dark { background-color: #ffffff !important; border: 1px solid #cbd5e1; color: #0f172a; }
         .form-control-dark { background-color: #ffffff !important; border-color: #cbd5e1 !important; color: #0f172a !important; }
         .form-control-dark:focus { background-color: #ffffff !important; color: #0f172a !important; border-color: #10b981 !important; }
-        @media print { .no-print { display: none !important; } }
         .style-max-h { max-height: 250px; object-fit: contain; }
 
         /* Barra Lateral HFA */
@@ -39,6 +38,15 @@
         .img-preview { max-width: 100%; max-height: 180px; border-radius: 6px; border: 1px solid #cbd5e1; object-fit: cover; }
         .table-custom th { background-color: #065f46; color: #ffffff; font-weight: 600; text-transform: uppercase; font-size: 0.8rem; }
         .table-custom td { vertical-align: middle; }
+
+        /* REGRA ESTREITA PARA IMPRESSÃO / SALVAR PDF NATIVO */
+        @media print {
+            body * { visibility: hidden !important; }
+            #areaImpressaoPDF, #areaImpressaoPDF * { visibility: visible !important; }
+            #areaImpressaoPDF { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; background: white !important; }
+            .pagina-pdf { page-break-after: always !important; page-break-inside: avoid !important; padding: 15px !important; }
+            .no-print { display: none !important; }
+        }
     </style>
 </head>
 
@@ -99,7 +107,7 @@
                             <i class="fas fa-tasks mr-1"></i> Selecionar Todos
                         </button>
                         <button class="btn btn-sm btn-success mr-2" onclick="exportarExcel()">
-                            <i class="fas fa-file-excel mr-1"></i> Excel
+                            <i class="fas fa-file-excel mr-1"></i> Excel com Fotos
                         </button>
                         <button class="btn btn-sm btn-info mr-2" onclick="abrirModalSelecaoPDF()">
                             <i class="fas fa-file-pdf mr-1"></i> Relatório PDF
@@ -184,15 +192,16 @@
         </div>
     </div>
 
+    <!-- ÁREA DE IMPRESSÃO PDF DIRETA -->
+    <div id="areaImpressaoPDF" class="d-none"></div>
+
     <!-- Modal Novo / Editar Registro -->
     <div class="modal fade" id="modalRegistro" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header bg-success text-white">
                     <h5 class="modal-title font-weight-bold" id="modalTitulo">Novo Registro de Infraestrutura</h5>
-                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Fechar">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
                 </div>
                 <div class="modal-body">
                     <form id="formRegistro">
@@ -212,7 +221,7 @@
                             </div>
                             <div class="form-group col-md-4">
                                 <label class="font-weight-bold">Identificação / Tag *</label>
-                                <input type="text" id="inputRackId" class="form-control form-control-dark" placeholder="Ex: RACK-01 / SW-CORE" required>
+                                <input type="text" id="inputRackId" class="form-control form-control-dark" placeholder="Ex: SW-CORE-01" required>
                             </div>
                         </div>
 
@@ -229,7 +238,7 @@
 
                         <div class="form-group">
                             <label class="font-weight-bold">Descrição das Atividades / Observações</label>
-                            <textarea id="inputComentarios" class="form-control form-control-dark" rows="3" placeholder="Detalhes da organização, trocas de patch cord, tomadas, etc."></textarea>
+                            <textarea id="inputComentarios" class="form-control form-control-dark" rows="3" placeholder="Detalhes da organização, trocas de patch cord, etc."></textarea>
                         </div>
 
                         <div class="form-row">
@@ -304,7 +313,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
-                    <button type="button" class="btn btn-danger" onclick="exportarPDFIndividual()"><i class="fas fa-file-pdf mr-1"></i> Baixar PDF</button>
+                    <button type="button" class="btn btn-danger" onclick="exportarPDFIndividual()"><i class="fas fa-file-pdf mr-1"></i> Baixar PDF Individual</button>
                 </div>
             </div>
         </div>
@@ -352,7 +361,6 @@
         let usandoNuvem = false;
         let dadosRacks = [];
 
-        // Inicialização
         $(document).ready(function() {
             initSupabase();
             carregarDados();
@@ -384,7 +392,6 @@
             }
         }
 
-        // Carregar Dados (Nuvem / LocalStorage)
         async function carregarDados() {
             if (usandoNuvem && supabaseClient) {
                 try {
@@ -394,7 +401,7 @@
                         id: item.id,
                         tipo: item.tipo,
                         setor: item.setor,
-                        rackId: item.rack_id,
+                        rackId: item.rack_id || item.rackId || 'SEM TAG',
                         modelo: item.modelo || '',
                         tecnico: item.tecnico || '',
                         comentarios: item.comentarios || '',
@@ -426,386 +433,6 @@
             localStorage.setItem('hfa_racks_dados', JSON.stringify(dadosRacks));
         }
 
-        // Ordenação por Setor e Identificação
         function ordenarDadosRacks(lista) {
             return lista.sort((a, b) => {
-                const setorA = (a.setor || '').toLowerCase();
-                const setorB = (b.setor || '').toLowerCase();
-                if (setorA < setorB) return -1;
-                if (setorA > setorB) return 1;
-
-                const tagA = (a.rackId || '').toLowerCase();
-                const tagB = (b.rackId || '').toLowerCase();
-                return tagA.localeCompare(tagB, undefined, { numeric: true, sensitivity: 'base' });
-            });
-        }
-
-        // Atualizar Interface
-        function aplicarFiltros() {
-            const tipo = $('#filtroTipo').val();
-            const setor = $('#filtroSetor').val();
-
-            let filtrados = dadosRacks;
-
-            if (tipo !== 'TODOS') filtrados = filtrados.filter(r => r.tipo === tipo);
-            if (setor !== 'TODOS') filtrados = filtrados.filter(r => r.setor === setor);
-
-            const ordenados = ordenarDadosRacks([...filtrados]);
-            renderizarTabela(ordenados);
-        }
-
-        function renderizarTabela(lista) {
-            const tbody = $('#tabelaRacksBody');
-            tbody.empty();
-
-            $('#totalMapeado').text(lista.length);
-
-            if (lista.length === 0) {
-                tbody.append(`<tr><td colspan="8" class="text-center py-4 text-muted">Nenhum equipamento cadastrado nesta categoria.</td></tr>`);
-                return;
-            }
-
-            lista.forEach((item) => {
-                const badgeClass = item.tipo === 'SWITCH' ? 'badge-success' : item.tipo === 'RACK' ? 'badge-primary' : 'badge-warning';
-                
-                tbody.append(`
-                    <tr>
-                        <td class="text-center no-print">
-                            <input type="checkbox" class="checkItem" value="${item.id || item.rackId}">
-                        </td>
-                        <td><span class="badge ${badgeClass} px-2 py-1">${item.tipo}</span></td>
-                        <td class="font-weight-bold text-dark">${item.setor}</td>
-                        <td class="text-primary font-weight-bold">${item.rackId}</td>
-                        <td>${item.modelo || '-'}</td>
-                        <td>${item.tecnico || '-'}</td>
-                        <td><small class="text-muted">${item.data}</small></td>
-                        <td class="text-center no-print">
-                            <button class="btn btn-sm btn-info" onclick="visualizarDetalhes('${item.rackId}')" title="Ver Detalhes"><i class="fas fa-eye"></i></button>
-                            <button class="btn btn-sm btn-danger ml-1" onclick="excluirRegistro(${item.id ? `'${item.id}'` : `'${item.rackId}'`})" title="Excluir"><i class="fas fa-trash"></i></button>
-                        </td>
-                    </tr>
-                `);
-            });
-        }
-
-        function atualizarContadores() {
-            $('#countSwitch').text(dadosRacks.filter(r => r.tipo === 'SWITCH').length);
-            $('#countRack').text(dadosRacks.filter(r => r.tipo === 'RACK').length);
-            $('#countRuck').text(dadosRacks.filter(r => r.tipo === 'RUCK').length);
-
-            const ultimos = dadosRacks.slice(0, 5);
-            const elRecentes = $('#listaRecentes');
-            elRecentes.empty();
-
-            if (ultimos.length === 0) {
-                elRecentes.append('<p class="mb-0">Nenhum item cadastrado.</p>');
-            } else {
-                ultimos.forEach(u => {
-                    elRecentes.append(`<div class="mb-1"><strong>${u.rackId}</strong> - <small>${u.setor}</small></div>`);
-                });
-            }
-        }
-
-        function preencherFiltroSetores() {
-            const setores = [...new Set(dadosRacks.map(r => r.setor))].sort();
-            const select = $('#filtroSetor');
-            select.html('<option value="TODOS">Todos os Setores</option>');
-            setores.forEach(s => {
-                select.append(`<option value="${s}">${s}</option>`);
-            });
-        }
-
-        function filtrarCategoria(cat) {
-            $('#filtroTipo').val(cat);
-            aplicarFiltros();
-        }
-
-        // Modais e Imagens
-        function abrirModalNovo() {
-            $('#formRegistro')[0].reset();
-            $('#editIndex').val('-1');
-            $('#imgAntesPreview, #imgDepoisPreview').attr('src', '').addClass('d-none');
-            $('#modalTitulo').text('Novo Registro de Infraestrutura');
-            ajustarCamposPorTipo();
-            $('#modalRegistro').modal('show');
-        }
-
-        function ajustarCamposPorTipo() {
-            const tipo = $('#inputTipo').val();
-            if (tipo === 'RUCK') {
-                $('#boxFotoDepois').hide();
-            } else {
-                $('#boxFotoDepois').show();
-            }
-        }
-
-        function previewImage(input, targetId) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    $(`#${targetId}`).attr('src', e.target.result).removeClass('d-none');
-                }
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        // Salvar / Excluir
-        async function salvarRegistro() {
-            const tipo = $('#inputTipo').val();
-            const setor = $('#inputSetor').val().trim();
-            const rackId = $('#inputRackId').val().trim();
-            const modelo = $('#inputModelo').val().trim();
-            const tecnico = $('#inputTecnico').val().trim();
-            const comentarios = $('#inputComentarios').val().trim();
-
-            if (!setor || !rackId) {
-                alert('Por favor, preencha os campos obrigatórios (Setor e Identificação).');
-                return;
-            }
-
-            const fotoAntes = $('#imgAntesPreview').attr('src') || '';
-            const fotoDepois = tipo !== 'RUCK' ? ($('#imgDepoisPreview').attr('src') || '') : '';
-
-            if (usandoNuvem && supabaseClient) {
-                try {
-                    const { error } = await supabaseClient.from('racks').insert([{
-                        tipo, setor, rack_id: rackId, modelo, tecnico, comentarios,
-                        foto_antes: fotoAntes, foto_depois: fotoDepois
-                    }]);
-                    if (error) throw error;
-                } catch (err) {
-                    alert('Erro ao salvar no Supabase. O registro será salvo localmente.');
-                    console.error(err);
-                }
-            }
-
-            // Atualiza memória local
-            dadosRacks.unshift({
-                tipo, setor, rackId, modelo, tecnico, comentarios,
-                fotoAntes, fotoDepois, data: new Date().toLocaleDateString('pt-BR')
-            });
-
-            salvarLocalStorage();
-            $('#modalRegistro').modal('hide');
-            carregarDados();
-        }
-
-        async function excluirRegistro(idOrTag) {
-            if (!confirm('Deseja realmente excluir este registro?')) return;
-
-            if (usandoNuvem && supabaseClient) {
-                try {
-                    await supabaseClient.from('racks').delete().eq('id', idOrTag);
-                } catch (e) {
-                    console.error(e);
-                }
-            }
-
-            dadosRacks = dadosRacks.filter(r => (r.id ? r.id != idOrTag : r.rackId != idOrTag));
-            salvarLocalStorage();
-            carregarDados();
-        }
-
-        // Detalhes & Exportação PDF Individual
-        function visualizarDetalhes(rackId) {
-            const item = dadosRacks.find(r => r.rackId === rackId);
-            if (!item) return;
-
-            $('#detRackId').text(item.rackId);
-            $('#detTipo').text(item.tipo);
-            $('#detSetor').text(item.setor);
-            $('#detModelo').text(item.modelo || '-');
-            $('#detTecnico').text(item.tecnico || '-');
-            $('#detData').text(item.data);
-            $('#detComentarios').text(item.comentarios || 'Sem observações.');
-
-            if (item.fotoAntes) {
-                $('#detFotoAntes').attr('src', item.fotoAntes).show();
-            } else {
-                $('#detFotoAntes').hide();
-            }
-
-            if (item.tipo !== 'RUCK' && item.fotoDepois) {
-                $('#detFotoDepois').attr('src', item.fotoDepois);
-                $('#detBoxFotoDepois').show();
-            } else {
-                $('#detBoxFotoDepois').hide();
-            }
-
-            $('#modalDetalhes').modal('show');
-        }
-
-        function exportarPDFIndividual() {
-            const element = document.getElementById('relatorioDocumento');
-            const rackId = document.getElementById('detRackId').innerText;
-            
-            const opt = {
-                margin:       [10, 10, 10, 10],
-                filename:     `Relatorio_Tecnico_HFA_${rackId}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, logging: false },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-
-            html2pdf().set(opt).from(element).save();
-        }
-
-        // Modais de Seleção de PDF por Categoria
-        function abrirModalSelecaoPDF() {
-            $('#modalEscolhaPDF').modal('show');
-        }
-
-        function fecharModalSelecaoPDF() {
-            $('#modalEscolhaPDF').modal('hide');
-        }
-
-        // GERAÇÃO DE PDF COMPLETA (CORRIGIDO: Inserção no DOM evitada em branco)
-        async function gerarPDFPorFiltro(tipoSelecionado) {
-            fecharModalSelecaoPDF();
-
-            let filtrados = dadosRacks;
-            if (tipoSelecionado !== 'TODOS') {
-                filtrados = dadosRacks.filter(r => r.tipo === tipoSelecionado);
-            }
-
-            if (filtrados.length === 0) {
-                alert('Nenhum registro encontrado para a categoria selecionada.');
-                return;
-            }
-
-            const dadosOrdenados = ordenarDadosRacks([...filtrados]);
-
-            let paginasHTML = '';
-
-            dadosOrdenados.forEach((rack, index) => {
-                paginasHTML += `
-                  <div style="padding: 20px; background: white; color: black; page-break-after: always; width: 100%;">
-                    <div style="border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 15px; display: flex; justify-content: space-between;">
-                      <div>
-                        <span style="font-size: 10px; font-weight: bold; color: #666;">MINISTÉRIO DA DEFESA • HOSPITAL DAS FORÇAS ARMADAS</span>
-                        <h3 style="font-size: 16px; margin: 0; font-weight: bold;">RELATÓRIO TÉCNICO DE INFRAESTRUTURA (${index + 1}/${dadosOrdenados.length})</h3>
-                        <span style="font-size: 12px; color: #444;">Categoria: ${tipoSelecionado}</span>
-                      </div>
-                      <div style="text-align: right;">
-                        <span style="font-size: 12px; font-weight: bold;">Data: ${rack.data}</span>
-                      </div>
-                    </div>
-
-                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 12px; background: #f8f9fa;">
-                      <tr>
-                        <td style="padding: 8px; border: 1px solid #ddd;"><b>Tipo:</b> ${rack.tipo}</td>
-                        <td style="padding: 8px; border: 1px solid #ddd;"><b>Setor:</b> ${rack.setor}</td>
-                        <td style="padding: 8px; border: 1px solid #ddd;"><b>Identificação:</b> ${rack.rackId}</td>
-                      </tr>
-                      <tr>
-                        <td style="padding: 8px; border: 1px solid #ddd;"><b>Modelo:</b> ${rack.modelo || '-'}</td>
-                        <td style="padding: 8px; border: 1px solid #ddd;" colspan="2"><b>Técnico:</b> ${rack.tecnico || '-'}</td>
-                      </tr>
-                    </table>
-
-                    <div style="display: flex; gap: 15px; margin-bottom: 15px;">
-                      <div style="flex: 1; text-align: center; border: 1px solid #ddd; padding: 5px;">
-                        <b style="color: #dc3545; font-size: 12px;">SITUAÇÃO ANTERIOR (ANTES)</b><br>
-                        ${rack.fotoAntes ? `<img src="${rack.fotoAntes}" style="max-width: 100%; max-height: 220px; object-fit: contain; margin-top: 5px;">` : '<p style="color:#aaa; font-size:11px;">Sem Foto</p>'}
-                      </div>
-                      ${rack.tipo !== 'RUCK' ? `
-                      <div style="flex: 1; text-align: center; border: 1px solid #ddd; padding: 5px;">
-                        <b style="color: #198754; font-size: 12px;">SITUAÇÃO ATUAL (DEPOIS)</b><br>
-                        ${rack.fotoDepois ? `<img src="${rack.fotoDepois}" style="max-width: 100%; max-height: 220px; object-fit: contain; margin-top: 5px;">` : '<p style="color:#aaa; font-size:11px;">Sem Foto</p>'}
-                      </div>` : ''}
-                    </div>
-
-                    <div style="border: 1px solid #ddd; padding: 10px; margin-bottom: 20px; font-size: 12px; background: #f8f9fa;">
-                      <b>Descrição das Atividades:</b>
-                      <p style="margin: 5px 0 0 0; white-space: pre-line;">${rack.comentarios || 'Sem observações.'}</p>
-                    </div>
-                  </div>
-                `;
-            });
-
-            // Elemento temporário anexado ao DOM para renderização perfeita
-            const containerTemp = document.createElement('div');
-            containerTemp.style.position = 'absolute';
-            containerTemp.style.left = '-9999px';
-            containerTemp.style.top = '0px';
-            containerTemp.style.width = '750px';
-            containerTemp.innerHTML = paginasHTML;
-            document.body.appendChild(containerTemp);
-
-            const opt = {
-                margin:       [5, 5, 5, 5],
-                filename:     `Relatorio_${tipoSelecionado}_HFA_${new Date().toISOString().slice(0, 10)}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, logging: false },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-
-            try {
-                await html2pdf().set(opt).from(containerTemp).save();
-            } catch (err) {
-                console.error('Erro ao gerar PDF:', err);
-                alert('Erro ao gerar PDF. Verifique se todas as imagens estão acessíveis.');
-            } finally {
-                document.body.removeChild(containerTemp);
-            }
-        }
-
-        // Exportação para Excel
-        async function exportarExcel() {
-            if (dadosRacks.length === 0) {
-                alert('Não há dados cadastrados para exportar.');
-                return;
-            }
-
-            const workbook = new ExcelJS.Workbook();
-            const worksheet = workbook.addWorksheet('Infraestrutura HFA');
-
-            worksheet.columns = [
-                { header: 'Tipo', key: 'tipo', width: 12 },
-                { header: 'Setor / Bloco', key: 'setor', width: 25 },
-                { header: 'Identificação', key: 'rackId', width: 20 },
-                { header: 'Modelo', key: 'modelo', width: 20 },
-                { header: 'Técnico', key: 'tecnico', width: 20 },
-                { header: 'Data', key: 'data', width: 15 },
-                { header: 'Observações', key: 'comentarios', width: 35 }
-            ];
-
-            const ordenados = ordenarDadosRacks([...dadosRacks]);
-
-            ordenados.forEach(item => {
-                worksheet.addRow({
-                    tipo: item.tipo,
-                    setor: item.setor,
-                    rackId: item.rackId,
-                    modelo: item.modelo || '-',
-                    tecnico: item.tecnico || '-',
-                    data: item.data,
-                    comentarios: item.comentarios || '-'
-                });
-            });
-
-            worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFF' } };
-            worksheet.getRow(1).fill = {
-                type: 'pattern',
-                pattern: 'solid',
-                fgColor: { argb: '065F46' }
-            };
-
-            const buffer = await workbook.xlsx.writeBuffer();
-            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-            saveAs(blob, `Documentacao_Infraestrutura_HFA_${new Date().toISOString().slice(0, 10)}.xlsx`);
-        }
-
-        // Seleção Múltipla
-        function toggleSelectAll(master) {
-            $('.checkItem').prop('checked', master.checked);
-        }
-
-        function selecionarTodosParaAcao() {
-            const checkMaster = document.getElementById('checkAll');
-            checkMaster.checked = !checkMaster.checked;
-            toggleSelectAll(checkMaster);
-        }
-    </script>
-</body>
-</html>
+                const setorA = (a.setor
