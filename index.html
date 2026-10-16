@@ -1,1393 +1,811 @@
-<!-- CDN Directs -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/startbootstrap-sb-admin-2@4.1.4/css/sb-admin-2.min.css">
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HFA TI - Documentação de Infraestrutura</title>
 
-<!-- Dependências Externas -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<!-- Bibliotecas para Exportação de Excel com Imagens (ExcelJS + FileSaver) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- FontAwesome & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/startbootstrap-sb-admin-2@4.1.4/css/sb-admin-2.min.css">
 
-<style>
-    body { background-color: #f8fafc !important; color: #1e293b; font-family: 'Roboto', Arial, sans-serif; }
-    .bg-dark-custom { background-color: #f1f5f9 !important; }
-    .card-dark { background-color: #ffffff !important; border: 1px solid #cbd5e1; color: #0f172a; }
-    .form-control-dark { background-color: #ffffff !important; border-color: #cbd5e1 !important; color: #0f172a !important; }
-    .form-control-dark:focus { background-color: #ffffff !important; color: #0f172a !important; border-color: #10b981 !important; }
-    @media print { .no-print { display: none !important; } }
-    .style-max-h { max-height: 250px; object-fit: contain; }
+    <!-- Dependências de Exportação (PDF, Excel, Supabase) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    /* Aumento da Largura da Barra Lateral */
-    .sidebar { width: 280px !important; }
+    <style>
+        body { background-color: #f8fafc !important; color: #1e293b; font-family: 'Roboto', Arial, sans-serif; }
+        .bg-dark-custom { background-color: #f1f5f9 !important; }
+        .card-dark { background-color: #ffffff !important; border: 1px solid #cbd5e1; color: #0f172a; }
+        .form-control-dark { background-color: #ffffff !important; border-color: #cbd5e1 !important; color: #0f172a !important; }
+        .form-control-dark:focus { background-color: #ffffff !important; color: #0f172a !important; border-color: #10b981 !important; }
+        @media print { .no-print { display: none !important; } }
+        .style-max-h { max-height: 250px; object-fit: contain; }
 
-    /* Fundo Verde da Barra Lateral */
-    .bg-sidebar-verde { background-color: #065f46 !important; }
+        /* Barra Lateral HFA */
+        .sidebar { width: 280px !important; }
+        .bg-sidebar-verde { background-color: #065f46 !important; }
+        .sidebar-heading-custom { font-family: 'Roboto', Arial, sans-serif !important; font-size: 0.85rem !important; text-transform: uppercase; letter-spacing: 0.05em; color: #a7f3d0 !important; font-weight: 700; padding: 0.75rem 1rem 0.25rem; }
+        
+        /* Status Conectado */
+        .status-badge { font-size: 0.75rem; padding: 4px 10px; border-radius: 12px; font-weight: 600; }
+        .status-online { background-color: #059669; color: #ffffff; }
+        .status-offline { background-color: #dc2626; color: #ffffff; }
 
-    .sidebar-heading-custom {
-        font-family: 'Roboto', Arial, sans-serif !important;
-        font-size: 0.85rem !important;
-        font-weight: 700 !important;
-        letter-spacing: 1px;
-        color: #d1fae5 !important;
-        text-transform: uppercase;
-    }
+        /* Estilo da Imagem e Tabela */
+        .img-preview { max-width: 100%; max-height: 180px; border-radius: 6px; border: 1px solid #cbd5e1; object-fit: cover; }
+        .table-custom th { background-color: #065f46; color: #ffffff; font-weight: 600; text-transform: uppercase; font-size: 0.8rem; }
+        .table-custom td { vertical-align: middle; }
+    </style>
+</head>
 
-    .sidebar-item-categoria {
-        cursor: pointer;
-        transition: all 0.2s ease-in-out;
-        background-color: rgba(255, 255, 255, 0.15) !important;
-        border-left: 5px solid transparent;
-        font-family: 'Roboto', Arial, sans-serif !important;
-        font-size: 1rem !important;
-        font-weight: 600 !important;
-        padding: 12px 16px !important;
-        margin-bottom: 8px !important;
-    }
-    .sidebar-item-categoria:hover {
-        background-color: rgba(255, 255, 255, 0.28) !important;
-        border-left-color: #facc15;
-    }
-    .sidebar-item-categoria.active-categoria {
-        background-color: #10b981 !important;
-        border-left-color: #ffffff;
-        box-shadow: 0 3px 6px rgba(0,0,0,0.25);
-    }
+<body id="page-top">
+    <div id="wrapper">
+        <!-- Sidebar -->
+        <ul class="navbar-nav bg-sidebar-verde sidebar sidebar-dark accordion no-print" id="accordionSidebar">
+            <a class="sidebar-brand d-flex align-items-center justify-content-center my-3" href="#">
+                <div class="sidebar-brand-icon">
+                    <img src="logo-hfa.png" alt="Logo HFA" style="max-height: 60px; max-width: 100%;" onerror="this.style.display='none'">
+                </div>
+                <div class="sidebar-brand-text mx-2 text-white font-weight-bold" style="font-size: 0.9rem;">HFA TI</div>
+            </a>
+            <hr class="sidebar-divider my-0 border-light">
 
-    /* Estilo da Lista Lateral de Registros Recentes */
-    .recent-item-sidebar {
-        cursor: pointer;
-        background-color: rgba(255, 255, 255, 0.1) !important;
-        border-left: 3px solid #10b981;
-        padding: 8px 12px;
-        margin-bottom: 6px;
-        border-radius: 4px;
-        transition: all 0.2s ease-in-out;
-        font-size: 0.82rem;
-        color: #ffffff;
-    }
-    .recent-item-sidebar:hover {
-        background-color: rgba(255, 255, 255, 0.25) !important;
-        border-left-color: #facc15;
-        transform: translateX(3px);
-    }
+            <div class="sidebar-heading-custom mt-3">Categorias</div>
+            <li class="nav-item active">
+                <a class="nav-link text-white" href="#" onclick="filtrarCategoria('TODOS')">
+                    <i class="fas fa-fw fa-th-large mr-2"></i><span>Todos os Itens</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-white d-flex justify-content-between align-items-center" href="#" onclick="filtrarCategoria('SWITCH')">
+                    <div><i class="fas fa-fw fa-network-wired mr-2"></i><span>Switches</span></div>
+                    <span class="badge badge-light text-dark" id="countSwitch">0</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-white d-flex justify-content-between align-items-center" href="#" onclick="filtrarCategoria('RACK')">
+                    <div><i class="fas fa-fw fa-server mr-2"></i><span>Racks</span></div>
+                    <span class="badge badge-light text-dark" id="countRack">0</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-white d-flex justify-content-between align-items-center" href="#" onclick="filtrarCategoria('RUCK')">
+                    <div><i class="fas fa-fw fa-wifi mr-2"></i><span>Rucks</span></div>
+                    <span class="badge badge-light text-dark" id="countRuck">0</span>
+                </a>
+            </li>
 
-    /* Botões de Ação */
-    .btn-azul { background-color: #2563eb !important; color: #ffffff !important; border: none; }
-    .btn-azul:hover { background-color: #1d4ed8 !important; }
-    .btn-verde { background-color: #10b981 !important; color: #ffffff !important; border: none; }
-    .btn-verde:hover { background-color: #047857 !important; }
-    .btn-ciano { background-color: #06b6d4 !important; color: #ffffff !important; border: none; }
-    .btn-ciano:hover { background-color: #0e7490 !important; }
-    .btn-amarelo { background-color: #f59e0b !important; color: #ffffff !important; border: none; }
-    .btn-amarelo:hover { background-color: #d97706 !important; }
-
-    /* Zoom de Imagem */
-    .img-zoomable {
-        cursor: zoom-in;
-        transition: transform 0.2s ease-in-out, opacity 0.2s;
-    }
-    .img-zoomable:hover {
-        opacity: 0.85;
-        transform: scale(1.02);
-    }
-
-    /* Caixa de Observações nos Cards */
-    .box-obs-card {
-        background-color: #f8fafc;
-        border-left: 3px solid #10b981;
-        padding: 6px 8px;
-        font-size: 0.75rem;
-        color: #334155;
-        max-height: 70px;
-        overflow-y: auto;
-        border-radius: 4px;
-    }
-
-    /* Ajuste Fixo nos Botões de Ação na Mesma Linha */
-    .card-actions-footer {
-        margin-top: auto !important;
-        padding-top: 10px;
-        border-top: 1px solid #e2e8f0;
-    }
-    .btn-acao-card {
-        font-size: 0.72rem !important;
-        font-weight: 700 !important;
-        white-space: nowrap !important;
-        padding: 5px 8px !important;
-        flex: 1 1 0px !important;
-        text-align: center;
-    }
-
-    /* Checkbox Seleção nos Cards */
-    .card-checkbox {
-        width: 18px;
-        height: 18px;
-        cursor: pointer;
-        accent-color: #ef4444;
-    }
-
-    /* Aumento de fonte na pré-visualização */
-    .text-prev-info {
-        font-size: 1rem !important;
-    }
-    .text-prev-obs-titulo {
-        font-size: 1.05rem !important;
-        font-weight: 700 !important;
-    }
-    .text-prev-obs-corpo {
-        font-size: 1rem !important;
-    }
-
-    /* Classe de destaque para aumentar o nome do Setor no topo do Card */
-    .card-header-setor-title {
-        font-size: 1.1rem !important;
-        font-weight: 800 !important;
-        letter-spacing: 0.5px;
-    }
-</style>
-
-
-<div id="wrapper">
-
-    <!-- Sidebar Ampliada com Fundo Verde -->
-    <ul class="navbar-nav bg-sidebar-verde sidebar sidebar-dark accordion border-right border-success no-print" id="accordionSidebar">
-
-        <a class="sidebar-brand d-flex flex-column align-items-center justify-content-center my-3 text-decoration-none" href="javascript:void(0)" onclick="filtrarPelaSidebar('TODOS')">
-            <div class="sidebar-brand-icon mb-1">
-                <!-- LOGO DO HFA CARREGADA DA PASTA DO PROJETO -->
-                <img src="logo-hfa.png" alt="Emblema HFA" style="max-height: 70px; width: auto; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5));">
+            <hr class="sidebar-divider border-light mt-3">
+            <div class="sidebar-heading-custom">Registros Recentes</div>
+            <div id="listaRecentes" class="px-3 text-white-50" style="font-size: 0.8rem;">
+                <p class="mb-0">Nenhum item cadastrado.</p>
             </div>
-            <div class="sidebar-brand-text text-white font-weight-bold mt-1" style="font-size: 0.9rem; letter-spacing: 1px;">
-                HFA <span class="text-warning">TI</span>
-            </div>
-        </a>
+        </ul>
 
-        <hr class="sidebar-divider my-2 border-light opacity-25">
-
-        <div class="sidebar-heading-custom px-3 my-2">
-            Categorias
-        </div>
-
-        <div class="px-3 py-1">
-            <div id="btnSideTodos" onclick="filtrarPelaSidebar('TODOS')" class="sidebar-item-categoria active-categoria rounded shadow-sm d-flex align-items-center justify-content-between text-white">
-                <span><i class="fas fa-th-large mr-3 text-warning"></i>Todos os Itens</span>
-            </div>
-
-            <div id="btnSideSwitch" onclick="filtrarPelaSidebar('SWITCH')" class="sidebar-item-categoria rounded shadow-sm d-flex align-items-center justify-content-between text-white">
-                <span><i class="fas fa-server mr-3 text-white"></i>Switches</span>
-                <span id="badgeSideSwitch" class="badge badge-light text-dark font-weight-bold px-2 py-1" style="font-size: 0.85rem;">0</span>
-            </div>
-
-            <div id="btnSideRack" onclick="filtrarPelaSidebar('RACK')" class="sidebar-item-categoria rounded shadow-sm d-flex align-items-center justify-content-between text-white">
-                <span><i class="fas fa-layer-group mr-3 text-white"></i>Racks</span>
-                <span id="badgeSideRack" class="badge badge-light text-dark font-weight-bold px-2 py-1" style="font-size: 0.85rem;">0</span>
-            </div>
-
-            <div id="btnSideRuck" onclick="filtrarPelaSidebar('RUCK')" class="sidebar-item-categoria rounded shadow-sm d-flex align-items-center justify-content-between text-white">
-                <span><i class="fas fa-wifi mr-3 text-white"></i>Rucks</span>
-                <span id="badgeSideRuck" class="badge badge-light text-dark font-weight-bold px-2 py-1" style="font-size: 0.85rem;">0</span>
-            </div>
-        </div>
-
-        <hr class="sidebar-divider my-2 border-light opacity-25">
-
-        <!-- PAINEL DA LISTA LATERAL DE REGISTROS ADICIONADOS -->
-        <div class="sidebar-heading-custom px-3 my-2 d-flex justify-content-between align-items-center">
-            <span>Registros Recentes</span>
-            <i class="fas fa-history text-warning"></i>
-        </div>
-
-        <div class="px-3 py-1" id="containerListaLateral" style="max-height: 280px; overflow-y: auto;">
-            <div class="text-xs text-white-50 text-center py-2">Carregando itens...</div>
-        </div>
-
-        <hr class="sidebar-divider d-none d-md-block border-light opacity-25">
-    </ul>
-
-    <!-- Content Wrapper -->
-    <div id="content-wrapper" class="d-flex flex-column bg-dark-custom">
-
-        <div id="content">
-
-            <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow-sm border-bottom border-light no-print">
-                <span class="navbar-brand font-weight-bold text-success text-sm">
-                    <i class="fas fa-hospital mr-2"></i>HOSPITAL DAS FORÇAS ARMADAS
-                </span>
-
-                <ul class="navbar-nav ml-auto flex-row align-items-center gap-2">
-                    <!-- BOTÃO SELEÇÃO MÚLTIPLA -->
-                    <li class="nav-item mr-2">
-                        <button onclick="alternarSelecionarTodos()" id="btnSelecionarTodos" class="btn btn-outline-secondary btn-sm font-weight-bold shadow-sm">
-                            <i class="fas fa-check-double mr-1"></i> Selecionar Todos
+        <!-- Conteúdo Principal -->
+        <div id="content-wrapper" class="d-flex flex-column bg-light">
+            <div id="content">
+                <!-- Topbar Header -->
+                <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow-sm no-print px-4">
+                    <h1 class="h4 text-gray-800 font-weight-bold mb-0">
+                        <i class="fas fa-hospital-alt text-success mr-2"></i>HOSPITAL DAS FORÇAS ARMADAS
+                    </h1>
+                    <div class="ml-auto d-flex align-items-center gap-2">
+                        <button class="btn btn-sm btn-outline-secondary mr-2" onclick="selecionarTodosParaAcao()">
+                            <i class="fas fa-tasks mr-1"></i> Selecionar Todos
                         </button>
-                    </li>
-                    <!-- BOTÃO DINÂMICO DE EXCLUSÃO EM MASSA -->
-                    <li class="nav-item mr-2 d-none" id="containerBtnExcluirMassa">
-                        <button onclick="excluirSelecionados()" id="btnExcluirMassa" class="btn btn-danger btn-sm font-weight-bold shadow-sm animate__animated animate__fadeIn">
-                            <i class="fas fa-trash-alt mr-1"></i> Excluir Selecionados (<span id="countSelecionados">0</span>)
-                        </button>
-                    </li>
-                    <li class="nav-item mr-2">
-                        <button onclick="exportarParaExcel()" class="btn btn-verde btn-sm font-weight-bold shadow-sm">
+                        <button class="btn btn-sm btn-success mr-2" onclick="exportarExcel()">
                             <i class="fas fa-file-excel mr-1"></i> Excel
                         </button>
-                    </li>
-                    <li class="nav-item mr-2">
-                        <button onclick="abrirModalSelecaoPDF()" class="btn btn-ciano btn-sm font-weight-bold shadow-sm">
+                        <button class="btn btn-sm btn-info mr-2" onclick="abrirModalSelecaoPDF()">
                             <i class="fas fa-file-pdf mr-1"></i> Relatório PDF
                         </button>
-                    </li>
-                    <li class="nav-item">
-                        <button onclick="abrirModal()" class="btn btn-azul btn-sm font-weight-bold shadow-sm">
+                        <button class="btn btn-sm btn-primary" onclick="abrirModalNovo()">
                             <i class="fas fa-plus mr-1"></i> Novo Registro
                         </button>
-                    </li>
-                </ul>
-            </nav>
-
-            <div class="container-fluid">
-
-                <div class="d-flex justify-content-between align-items-center mb-3 no-print">
-                    <h1 class="h4 mb-0 text-slate-800 font-weight-bold">Documentação de Infraestrutura</h1>
-                    <span id="statusConexao" class="badge badge-success p-2">Modo Local / Aguardando Banco...</span>
-                </div>
-
-                <!-- Filtros Superiores -->
-                <div class="card card-dark mb-4 shadow-sm no-print">
-                    <div class="card-body p-3">
-                        <div class="row align-items-center">
-                            <div class="col-md-4 mb-2 mb-md-0">
-                                <label class="text-xs font-weight-bold text-uppercase text-muted mb-1">Tipo de Equipamento:</label>
-                                <select id="filtroTipo" onchange="aoMudarTipo()" class="form-control form-control-dark font-weight-bold">
-                                    <option value="TODOS">Todos os Tipos</option>
-                                    <option value="SWITCH">Switches</option>
-                                    <option value="RACK">Racks</option>
-                                    <option value="RUCK">Rucks</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4 mb-2 mb-md-0">
-                                <label class="text-xs font-weight-bold text-uppercase text-muted mb-1">Setor / Bloco / Ala:</label>
-                                <select id="filtroSetor" onchange="renderizarRacks()" class="form-control form-control-dark font-weight-bold">
-                                    <option value="TODOS">Todos os Setores</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4 text-md-right">
-                                <span class="text-sm font-weight-bold text-slate-600">
-                                    Total Mapeado: <strong id="totalRacks" class="text-success h5 font-weight-bold mb-0">0</strong>
-                                </span>
-                            </div>
-                        </div>
                     </div>
-                </div>
+                </nav>
 
-                <!-- Grid de Equipamentos -->
-                <div id="listaRacks" class="row no-print"></div>
-
-                <!-- ÁREA DE VISUALIZAÇÃO COMPLETA (RELATÓRIO TÉCNICO INDIVIDUAL) -->
-                <div id="areaDetalhe" class="d-none">
-                    <div class="d-flex justify-content-between align-items-center mb-3 no-print">
-                        <button onclick="fecharDetalhe()" class="btn btn-secondary btn-sm font-weight-bold">
-                            <i class="fas fa-arrow-left mr-1"></i> Voltar para a lista
-                        </button>
-                        <button onclick="exportarPDFIndividual()" class="btn btn-verde btn-sm font-weight-bold shadow-sm">
-                            <i class="fas fa-file-pdf mr-1"></i> Baixar Relatório em PDF
-                        </button>
+                <!-- Conteúdo da Página -->
+                <div class="container-fluid px-4">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h2 class="h5 font-weight-bold text-gray-800 mb-0">Documentação de Infraestrutura</h2>
+                        <span id="statusConexao" class="status-badge status-offline">• Verificando...</span>
                     </div>
-                    
-                    <div class="bg-white text-dark p-4 rounded shadow border" id="relatorioDocumento">
-                        <div class="border-bottom pb-3 mb-4 d-flex justify-content-between align-items-center">
-                            <div>
-                                <span class="text-xs font-weight-bold text-muted uppercase">MINISTÉRIO DA DEFESA • HOSPITAL DAS FORÇAS ARMADAS</span>
-                                <h3 class="h5 font-weight-bold text-dark mb-0">RELATÓRIO TÉCNICO DE INFRAESTRUTURA DE REDE</h3>
-                            </div>
-                            <div>
-                                <span class="badge badge-success p-2 font-mono" id="detData" style="font-size: 0.85rem;"></span>
-                            </div>
-                        </div>
 
-                        <!-- TABELA DE INFORMAÇÕES CADASTRADAS COMPLETAS -->
-                        <div class="row bg-light p-3 rounded mb-4 text-sm border">
-                            <div class="col-md-2 mb-2 mb-md-0">
-                                <span class="text-muted d-block text-xs uppercase font-weight-bold">Tipo:</span>
-                                <strong id="detTipo" class="text-success h6 font-weight-bold mb-0"></strong>
-                            </div>
-                            <div class="col-md-3 mb-2 mb-md-0">
-                                <span class="text-muted d-block text-xs uppercase font-weight-bold">Setor / Bloco:</span>
-                                <strong id="detSetor" class="text-dark h6 font-weight-bold mb-0"></strong>
-                            </div>
-                            <div class="col-md-3 mb-2 mb-md-0">
-                                <span class="text-muted d-block text-xs uppercase font-weight-bold">Identificação / Tag:</span>
-                                <strong id="detRackId" class="text-dark h6 font-weight-bold mb-0"></strong>
-                            </div>
-                            <div class="col-md-2 mb-2 mb-md-0">
-                                <span class="text-muted d-block text-xs uppercase font-weight-bold">Modelo / Marca:</span>
-                                <strong id="detModelo" class="text-dark"></strong>
-                            </div>
-                            <div class="col-md-2">
-                                <span class="text-muted d-block text-xs uppercase font-weight-bold">Técnico:</span>
-                                <strong id="detTecnico" class="text-dark"></strong>
-                            </div>
-                        </div>
-
-                        <!-- IMAGENS COMPLETAS ANTES E DEPOIS COM SUPORTE A ZOOM -->
-                        <div class="row mb-4">
-                            <div class="col-md-6 text-center mb-3 mb-md-0" id="boxDetAntes">
-                                <h6 class="font-weight-bold text-danger text-xs uppercase mb-2">SITUAÇÃO ANTERIOR (ANTES)</h6>
-                                <div class="border rounded p-2 bg-light d-flex align-items-center justify-content-center" style="min-height: 250px;">
-                                    <img id="detImgAntes" class="img-fluid style-max-h img-zoomable" title="Clique para Ampliar/Zoom">
+                    <!-- Filtros -->
+                    <div class="card card-dark shadow-sm mb-4">
+                        <div class="card-body py-3">
+                            <div class="row align-items-center">
+                                <div class="col-md-5 mb-2 mb-md-0">
+                                    <label class="form-label text-muted small mb-1 font-weight-bold">TIPO DE EQUIPAMENTO:</label>
+                                    <select id="filtroTipo" class="form-control form-control-dark form-control-sm" onchange="aplicarFiltros()">
+                                        <option value="TODOS">Todos os Tipos</option>
+                                        <option value="SWITCH">Switches</option>
+                                        <option value="RACK">Racks</option>
+                                        <option value="RUCK">Rucks</option>
+                                    </select>
                                 </div>
-                            </div>
-                            <div class="col-md-6 text-center" id="boxDetDepois">
-                                <h6 class="font-weight-bold text-success text-xs uppercase mb-2">SITUAÇÃO ATUAL (DEPOIS)</h6>
-                                <div class="border rounded p-2 bg-light d-flex align-items-center justify-content-center" style="min-height: 250px;">
-                                    <img id="detImgDepois" class="img-fluid style-max-h img-zoomable" title="Clique para Ampliar/Zoom">
+                                <div class="col-md-5 mb-2 mb-md-0">
+                                    <label class="form-label text-muted small mb-1 font-weight-bold">SETOR / BLOCO / ALA:</label>
+                                    <select id="filtroSetor" class="form-control form-control-dark form-control-sm" onchange="aplicarFiltros()">
+                                        <option value="TODOS">Todos os Setores</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2 text-right">
+                                    <span class="text-muted small font-weight-bold">Total Mapeado:</span>
+                                    <span id="totalMapeado" class="h5 font-weight-bold text-success mb-0 d-block">0</span>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- DESCRIÇÃO COMPLETA DAS ATIVIDADES/OBSERVAÇÕES -->
-                        <div class="border rounded p-3 bg-light mb-4">
-                            <h6 class="font-weight-bold text-dark text-xs uppercase border-bottom pb-2">
-                                <i class="fas fa-clipboard-list mr-1 text-success"></i>Descrição das Atividades Realizadas & Observações
-                            </h6>
-                            <p id="detComentarios" class="text-sm text-secondary mb-0 mt-2" style="white-space: pre-line; min-height: 50px;"></p>
-                        </div>
-
-                        <div class="row pt-4 border-top text-center text-xs text-muted">
-                            <div class="col-6">
-                                <div class="border-bottom mb-1 w-75 mx-auto"></div>
-                                <span>Assinatura do Técnico Responsável</span>
+                    <!-- Tabela de Registros -->
+                    <div class="card card-dark shadow-sm mb-4">
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover table-striped table-custom mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 40px;" class="text-center no-print">
+                                                <input type="checkbox" id="checkAll" onclick="toggleSelectAll(this)">
+                                            </th>
+                                            <th>Tipo</th>
+                                            <th>Setor / Bloco</th>
+                                            <th>Identificação / Tag</th>
+                                            <th>Modelo</th>
+                                            <th>Técnico</th>
+                                            <th>Data</th>
+                                            <th class="text-center no-print" style="width: 130px;">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tabelaRacksBody">
+                                        <tr>
+                                            <td colspan="8" class="text-center py-4 text-muted">Carregando dados...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
-                            <div class="col-6">
-                                <div class="border-bottom mb-1 w-75 mx-auto"></div>
-                                <span>Visto da Chefia de TI / HFA</span>
-                            </div>
                         </div>
                     </div>
                 </div>
-
             </div>
-        </div>
 
-        <footer class="sticky-footer bg-white border-top mt-auto">
-            <div class="container my-auto">
-                <div class="copyright text-center my-auto text-muted font-weight-bold">
-                    <span>Hospital das Forças Armadas &copy; Documentação de Infraestrutura 2026</span>
+            <!-- Footer -->
+            <footer class="sticky-footer bg-white shadow-sm mt-auto py-3 no-print">
+                <div class="container my-auto text-center">
+                    <span class="text-muted small">Hospital das Forças Armadas © Documentação de Infraestrutura 2026</span>
                 </div>
-            </div>
-        </footer>
-    </div>
-</div>
-
-<!-- MODAL DE PRÉ-VISUALIZAÇÃO / ZOOM COM LETRAS AMPLIADAS -->
-<div class="modal fade" id="modalZoom" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
-        <div class="modal-content card-dark">
-            <div class="modal-header bg-dark text-white p-3">
-                <h5 class="modal-title font-weight-bold" id="modalZoomTitulo" style="font-size: 1.25rem;">Pré-visualização do Registro</h5>
-                <button class="close text-white" type="button" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">×</span>
-                </button>
-            </div>
-            <div class="modal-body p-3 bg-dark text-white">
-                <!-- PAINEL DE INFORMAÇÕES CADASTRADAS COM LETRAS AUMENTADAS -->
-                <div class="row bg-secondary text-white p-3 rounded mb-3 text-prev-info mx-0 border border-light">
-                    <div class="col-md-2 mb-2 mb-md-0"><strong>Tipo:</strong> <br><span id="prevTipo" class="text-warning font-weight-bold"></span></div>
-                    <div class="col-md-3 mb-2 mb-md-0"><strong>Setor / Bloco / Ala:</strong> <br><span id="prevSetor" class="font-weight-bold"></span></div>
-                    <div class="col-md-3 mb-2 mb-md-0"><strong>Tag/ID:</strong> <br><span id="prevRackId" class="text-warning font-weight-bold"></span></div>
-                    <div class="col-md-2 mb-2 mb-md-0"><strong style="font-size: 1.1rem;">Modelo:</strong> <br><span id="prevModelo" class="font-weight-bold" style="font-size: 1.1rem;"></span></div>
-                    <div class="col-md-2"><strong style="font-size: 1.1rem;">Técnico:</strong> <br><span id="prevTecnico" class="font-weight-bold" style="font-size: 1.1rem;"></span></div>
-                </div>
-
-                <!-- FOTOS LADO A LADO (ANTES E DEPOIS) -->
-                <div class="row">
-                    <div class="col-md-6 text-center mb-2 mb-md-0" id="prevBoxAntes">
-                        <span class="badge badge-danger mb-2 font-weight-bold p-2" style="font-size: 0.9rem;">SITUAÇÃO ANTERIOR (ANTES)</span>
-                        <div class="p-1 bg-black rounded d-flex align-items-center justify-content-center" style="min-height: 50vh;">
-                            <img id="prevImgAntes" src="" class="img-fluid rounded" style="max-height: 50vh; object-fit: contain;">
-                        </div>
-                    </div>
-                    <div class="col-md-6 text-center" id="prevBoxDepois">
-                        <span class="badge badge-success mb-2 font-weight-bold p-2" style="font-size: 0.9rem;">SITUAÇÃO ATUAL (DEPOIS)</span>
-                        <div class="p-1 bg-black rounded d-flex align-items-center justify-content-center" style="min-height: 50vh;">
-                            <img id="prevImgDepois" src="" class="img-fluid rounded" style="max-height: 50vh; object-fit: contain;">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- OBSERVAÇÕES E SERVIÇOS COM LETRAS AUMENTADAS -->
-                <div class="mt-3 p-3 rounded bg-secondary border border-light" id="prevBoxObs">
-                    <div class="text-prev-obs-titulo text-warning mb-1">
-                        <i class="fas fa-comment-alt mr-1"></i>Observações / Serviços:
-                    </div>
-                    <p id="prevComentarios" class="mb-0 text-white text-prev-obs-corpo" style="white-space: pre-line; line-height: 1.5;"></p>
-                </div>
-            </div>
+            </footer>
         </div>
     </div>
-</div>
 
-<!-- MODAL DE FORMULÁRIO (CADASTRO / EDIÇÃO) -->
-<div class="modal fade" id="modalForm" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content card-dark">
-            <div class="modal-header bg-success text-white" id="modalHeader">
-                <h5 class="modal-title font-weight-bold" id="modalTitulo">Novo Cadastro - HFA</h5>
-                <button class="close text-white" type="button" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">×</span>
-                </button>
-            </div>
-            <form id="formRack">
-                <input type="hidden" id="editIndex" value="-1">
-                <input type="hidden" id="editId" value="">
-
+    <!-- Modal Novo / Editar Registro -->
+    <div class="modal fade" id="modalRegistro" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title font-weight-bold" id="modalTitulo">Novo Registro de Infraestrutura</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Fechar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
                 <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label class="text-xs font-weight-bold uppercase">Tipo de Equipamento</label>
-                            <select id="inputTipo" required class="form-control form-control-dark font-weight-bold text-success">
-                                <option value="SWITCH">Switch</option>
-                                <option value="RACK">Rack</option>
-                                <option value="RUCK">Ruck</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="text-xs font-weight-bold uppercase">Setor / Bloco / Ala</label>
-                            <input type="text" id="inputSetor" required class="form-control form-control-dark" placeholder="Ex: Bloco B">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="text-xs font-weight-bold uppercase">Identificação / Tag</label>
-                            <input type="text" id="inputRackId" required class="form-control form-control-dark" placeholder="Ex: SW-01">
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="text-xs font-weight-bold uppercase">Modelo / Marca</label>
-                            <input type="text" id="inputModelo" class="form-control form-control-dark" placeholder="Ex: Huawei">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="text-xs font-weight-bold uppercase">Técnico Responsável</label>
-                            <input type="text" id="inputTecnico" required class="form-control form-control-dark" placeholder="Seu Nome">
-                        </div>
-                    </div>
-
-                    <div class="row bg-light p-2 rounded mb-3 border">
-                        <div class="col-md-6" id="containerFotoAntes">
-                            <label id="labelFotoAntes" class="text-xs font-weight-bold uppercase">Foto ANTES</label>
-                            <input type="file" id="inputAntes" accept="image/*" class="form-control-file text-xs">
-                            <small class="text-muted d-block mt-1" id="hintAntes">Obrigatório no cadastro.</small>
-                        </div>
-                        <div class="col-md-6" id="containerFotoDepois">
-                            <label class="text-xs font-weight-bold uppercase">Foto DEPOIS</label>
-                            <input type="file" id="inputDepois" accept="image/*" class="form-control-file text-xs">
-                            <small class="text-muted d-block mt-1" id="hintDepois">Obrigatório no cadastro.</small>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="text-xs font-weight-bold uppercase">Observações & Serviços Realizados</label>
-                        <textarea id="inputComentarios" rows="3" class="form-control form-control-dark" placeholder="Descrição do serviço..."></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer border-top">
-                    <button class="btn btn-secondary text-xs font-weight-bold" type="button" data-dismiss="modal">Cancelar</button>
-                    <button type="submit" id="btnSalvar" class="btn btn-azul text-xs font-weight-bold">Salvar Registro</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- MODAL SELEÇÃO PDF -->
-<div class="modal fade" id="modalPDFGeral" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content card-dark">
-            <div class="modal-header bg-info text-white">
-                <h5 class="modal-title font-weight-bold">Relatório PDF Consolidado</h5>
-                <button class="close text-white" type="button" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">×</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <p class="text-xs text-muted">Selecione qual categoria deseja gerar em PDF:</p>
-                <div class="d-flex flex-column gap-2">
-                    <button onclick="gerarPDFPorFiltro('TODOS')" class="btn btn-outline-dark text-left mb-2 text-xs font-weight-bold">🌐 Todos os Equipamentos</button>
-                    <button onclick="gerarPDFPorFiltro('SWITCH')" class="btn btn-outline-primary text-left mb-2 text-xs font-weight-bold">🔌 Apenas Switches (Azul)</button>
-                    <button onclick="gerarPDFPorFiltro('RACK')" class="btn btn-outline-success text-left mb-2 text-xs font-weight-bold">🗄️ Apenas Racks (Verde)</button>
-                    <button onclick="gerarPDFPorFiltro('RUCK')" class="btn btn-outline-info text-left mb-2 text-xs font-weight-bold">📡 Apenas Rucks (Azul Ciano)</button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Scripts CDN -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/startbootstrap-sb-admin-2@4.1.4/js/sb-admin-2.min.js"></script>
-
-<!-- Lógica JavaScript Principal -->
-<script>
-    // CONFIGURAÇÃO CONECTADA DO SEU SUPABASE
-    const SUPABASE_URL = 'https://jvdpibdorxwotlbxbubh.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_RHLlmxQmAhVMTTnvFB4NFw_GWL0MPsk';
-
-    let _supabase = null;
-    let usarBancoNuvem = false;
-
-    if (SUPABASE_URL && SUPABASE_KEY && !SUPABASE_URL.includes('SEU-PROJETO') && !SUPABASE_KEY.includes('COLE_SUA_CHAVE')) {
-        try {
-            _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-            usarBancoNuvem = true;
-        } catch (err) {
-            console.error("Erro ao inicializar Supabase client:", err);
-        }
-    }
-
-    let dadosRacks = [];
-    let itensSelecionados = new Set();
-
-    /* BANCO DE DADOS LOCAL INDEXEDDB (FALLBACK CASO OFFLINE) */
-    const DB_NAME = 'HFA_InfraDB';
-    const DB_VERSION = 1;
-    const STORE_NAME = 'racks';
-
-    function abrirDB() {
-        return new Promise((resolve, reject) => {
-            const request = indexedDB.open(DB_NAME, DB_VERSION);
-            request.onupgradeneeded = function(e) {
-                const db = e.target.result;
-                if (!db.objectStoreNames.contains(STORE_NAME)) {
-                    db.createObjectStore(STORE_NAME, { keyPath: 'localId', autoIncrement: true });
-                }
-            };
-            request.onsuccess = function(e) { resolve(e.target.result); };
-            request.onerror = function(e) { reject(e.target.error); };
-        });
-    }
-
-    async function carregarTodosDB() {
-        const db = await abrirDB();
-        return new Promise((resolve, reject) => {
-            const tx = db.transaction(STORE_NAME, 'readonly');
-            const store = tx.objectStore(STORE_NAME);
-            const req = store.getAll();
-            req.onsuccess = () => resolve(req.result || []);
-            req.onerror = () => reject(req.error);
-        });
-    }
-
-    async function salvarTodosDB(lista) {
-        const db = await abrirDB();
-        return new Promise((resolve, reject) => {
-            const tx = db.transaction(STORE_NAME, 'readwrite');
-            const store = tx.objectStore(STORE_NAME);
-            const clearReq = store.clear();
-            clearReq.onsuccess = () => {
-                if (lista.length === 0) return resolve();
-                let pending = lista.length;
-                lista.forEach(item => {
-                    const itemCopy = { ...item };
-                    delete itemCopy.localId;
-                    const addReq = store.add(itemCopy);
-                    addReq.onsuccess = () => {
-                        pending--;
-                        if (pending === 0) resolve();
-                    };
-                    addReq.onerror = () => {
-                        pending--;
-                        if (pending === 0) resolve();
-                    };
-                });
-            };
-            clearReq.onerror = () => reject(clearReq.error);
-        });
-    }
-
-    // ORDENAÇÃO ESTRITAMENTE ALFABÉTICA (1º Setor -> 2º Tag)
-    function ordenarDadosRacks(lista) {
-        return lista.sort((a, b) => {
-            const compSetor = (a.setor || '').localeCompare(b.setor || '', 'pt-BR', { numeric: true, sensitivity: 'base' });
-            if (compSetor !== 0) return compSetor;
-
-            return (a.rackId || '').localeCompare(b.rackId || '', 'pt-BR', { numeric: true, sensitivity: 'base' });
-        });
-    }
-
-    function obterCorDoSwitch(identificador, tipo) {
-        if (tipo === 'SWITCH') return { bg: '#2563eb', text: '#ffffff' };
-        if (tipo === 'RACK') return { bg: '#10b981', text: '#ffffff' };
-        if (tipo === 'RUCK') return { bg: '#06b6d4', text: '#ffffff' };
-        return { bg: '#64748b', text: '#ffffff' };
-    }
-
-    function abrirZoomImagemIndex(index) {
-        const rack = dadosRacks[index];
-        if (!rack) return;
-
-        document.getElementById('modalZoomTitulo').innerText = "Pré-visualização: " + rack.rackId;
-        document.getElementById('prevTipo').innerText = rack.tipo;
-        document.getElementById('prevSetor').innerText = rack.setor;
-        document.getElementById('prevRackId').innerText = rack.rackId;
-        document.getElementById('prevModelo').innerText = rack.modelo || 'Não informado';
-        document.getElementById('prevTecnico').innerText = rack.tecnico || 'Não informado';
-        document.getElementById('prevComentarios').innerText = rack.comentarios || 'Nenhuma observação informada.';
-
-        document.getElementById('prevImgAntes').src = rack.fotoAntes;
-
-        if (rack.tipo === 'RUCK') {
-            document.getElementById('prevBoxDepois').classList.add('d-none');
-            document.getElementById('prevBoxAntes').className = 'col-12 text-center';
-        } else {
-            document.getElementById('prevBoxDepois').classList.remove('d-none');
-            document.getElementById('prevBoxAntes').className = 'col-md-6 text-center mb-2 mb-md-0';
-            document.getElementById('prevImgDepois').src = rack.fotoDepois;
-        }
-
-        $('#modalZoom').modal('show');
-    }
-
-    async function inicializarDados() {
-        if (usarBancoNuvem) {
-            $('#statusConexao').text('Conectando ao Supabase...').removeClass().addClass('badge badge-info p-2');
-            try {
-                const { data, error } = await _supabase.from('racks').select('*');
-                if (!error && data) {
-                    dadosRacks = data.map(r => ({
-                        id: r.id,
-                        tipo: r.tipo || 'SWITCH',
-                        setor: r.setor,
-                        rackId: r.rack_id,
-                        modelo: r.modelo,
-                        tecnico: r.tecnico,
-                        comentarios: r.comentarios,
-                        data: new Date(r.created_at).toLocaleDateString('pt-BR'),
-                        fotoAntes: r.foto_antes,
-                        fotoDepois: r.foto_depois
-                    }));
-                    dadosRacks = ordenarDadosRacks(dadosRacks);
-                    $('#statusConexao').text('• Nuvem Conectado').removeClass().addClass('badge badge-success p-2');
-                } else {
-                    console.warn("Erro ao buscar Supabase:", error);
-                    await carregarDadosLocais();
-                }
-            } catch (err) {
-                console.error("Erro na conexão com Supabase:", err);
-                await carregarDadosLocais();
-            }
-        } else {
-            await carregarDadosLocais();
-        }
-
-        renderizarRacks();
-        atualizarFiltroSetores();
-        atualizarContadoresSidebar();
-        atualizarListaLateral();
-    }
-
-    async function carregarDadosLocais() {
-        try {
-            dadosRacks = await carregarTodosDB();
-            dadosRacks = dadosRacks.map(r => ({ ...r, tipo: r.tipo || 'SWITCH' }));
-            dadosRacks = ordenarDadosRacks(dadosRacks);
-            $('#statusConexao').text('• Armazenamento Local (Offline)').removeClass().addClass('badge badge-warning p-2');
-        } catch (err) {
-            console.error("Erro ao carregar do IndexedDB:", err);
-        }
-    }
-
-    async function salvarLocal() {
-        try {
-            await salvarTodosDB(dadosRacks);
-        } catch (err) {
-            console.error("Erro ao salvar no banco local:", err);
-        }
-    }
-
-    function abrirModal() {
-        document.getElementById('formRack').reset();
-        document.getElementById('editIndex').value = "-1";
-        document.getElementById('editId').value = "";
-        document.getElementById('modalTitulo').innerText = "Novo Cadastro - HFA";
-        document.getElementById('modalHeader').className = "modal-header bg-success text-white";
-        document.getElementById('inputAntes').setAttribute('required', 'required');
-        document.getElementById('inputDepois').setAttribute('required', 'required');
-        document.getElementById('hintAntes').innerText = "Obrigatório no cadastro.";
-        document.getElementById('hintDepois').innerText = "Obrigatório no cadastro.";
-        
-        document.getElementById('inputTipo').dispatchEvent(new Event('change'));
-        $('#modalForm').modal('show');
-    }
-
-    function fecharModal() { $('#modalForm').modal('hide'); }
-    function abrirModalSelecaoPDF() { $('#modalPDFGeral').modal('show'); }
-    function fecharModalSelecaoPDF() { $('#modalPDFGeral').modal('hide'); }
-
-    function atualizarContadoresSidebar() {
-        const countSwitch = dadosRacks.filter(r => r.tipo === 'SWITCH').length;
-        const countRack = dadosRacks.filter(r => r.tipo === 'RACK').length;
-        const countRuck = dadosRacks.filter(r => r.tipo === 'RUCK').length;
-
-        document.getElementById('badgeSideSwitch').innerText = countSwitch;
-        document.getElementById('badgeSideRack').innerText = countRack;
-        document.getElementById('badgeSideRuck').innerText = countRuck;
-    }
-
-    /* ATUALIZA O PAINEL DA BARRA LATERAL */
-    function atualizarListaLateral() {
-        const container = document.getElementById('containerListaLateral');
-        container.innerHTML = '';
-
-        if (dadosRacks.length === 0) {
-            container.innerHTML = `<div class="text-xs text-white-50 text-center py-2">Nenhum item cadastrado.</div>`;
-            return;
-        }
-
-        dadosRacks.forEach((item) => {
-            const indexReal = dadosRacks.indexOf(item);
-            container.innerHTML += `
-                <div class="recent-item-sidebar shadow-sm" onclick="abrirZoomImagemIndex(${indexReal})" title="Clique para abrir pré-visualização de ${item.rackId}">
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <strong class="text-warning font-weight-bold" style="font-size: 0.85rem;">${item.rackId}</strong>
-                        <span class="badge badge-light text-dark font-weight-bold text-uppercase" style="font-size: 0.65rem;">${item.tipo}</span>
-                    </div>
-                    <div class="text-truncate text-white-50" style="font-size: 0.75rem;">
-                        <i class="fas fa-map-marker-alt mr-1 text-success"></i>${item.setor}
-                    </div>
-                </div>
-            `;
-        });
-    }
-
-    function filtrarPelaSidebar(tipo) {
-        document.getElementById('filtroTipo').value = tipo;
-        document.querySelectorAll('.sidebar-item-categoria').forEach(el => el.classList.remove('active-categoria'));
-        if (tipo === 'TODOS') document.getElementById('btnSideTodos').classList.add('active-categoria');
-        if (tipo === 'SWITCH') document.getElementById('btnSideSwitch').classList.add('active-categoria');
-        if (tipo === 'RACK') document.getElementById('btnSideRack').classList.add('active-categoria');
-        if (tipo === 'RUCK') document.getElementById('btnSideRuck').classList.add('active-categoria');
-
-        aoMudarTipo();
-    }
-
-    function atualizarFiltroSetores() {
-        const selectSetor = document.getElementById('filtroSetor');
-        const filtroTipo = document.getElementById('filtroTipo').value;
-        const valorAnterior = selectSetor.value;
-
-        let filtrados = dadosRacks;
-        if (filtroTipo !== 'TODOS') filtrados = dadosRacks.filter(r => r.tipo === filtroTipo);
-
-        const setores = [...new Set(filtrados.map(r => r.setor))].sort((a, b) => a.localeCompare(b, 'pt-BR', { numeric: true, sensitivity: 'base' }));
-        selectSetor.innerHTML = '<option value="TODOS">Todos os Setores</option>';
-        setores.forEach(s => { selectSetor.innerHTML += `<option value="${s}">${s}</option>`; });
-
-        if (setores.includes(valorAnterior)) selectSetor.value = valorAnterior;
-        else selectSetor.value = 'TODOS';
-    }
-
-    function aoMudarTipo() {
-        atualizarFiltroSetores();
-        renderizarRacks();
-    }
-
-    /* LÓGICA DE SELEÇÃO E EXCLUSÃO EM MASSA */
-    function alternarSelecaoItem(indexReal, checkboxEl) {
-        if (checkboxEl.checked) {
-            itensSelecionados.add(indexReal);
-        } else {
-            itensSelecionados.delete(indexReal);
-        }
-        atualizarPainelExclusaoMassa();
-    }
-
-    function alternarSelecionarTodos() {
-        const filtroTipo = document.getElementById('filtroTipo').value;
-        const filtroSetor = document.getElementById('filtroSetor').value;
-
-        let filtrados = dadosRacks;
-        if (filtroTipo !== 'TODOS') filtrados = filtrados.filter(r => r.tipo === filtroTipo);
-        if (filtroSetor !== 'TODOS') filtrados = filtrados.filter(r => r.setor === filtroSetor);
-
-        const todosJaSelecionados = filtrados.every(item => itensSelecionados.has(dadosRacks.indexOf(item)));
-
-        if (todosJaSelecionados) {
-            filtrados.forEach(item => itensSelecionados.delete(dadosRacks.indexOf(item)));
-        } else {
-            filtrados.forEach(item => itensSelecionados.add(dadosRacks.indexOf(item)));
-        }
-
-        renderizarRacks();
-        atualizarPainelExclusaoMassa();
-    }
-
-    function atualizarPainelExclusaoMassa() {
-        const count = itensSelecionados.size;
-        const containerBtn = document.getElementById('containerBtnExcluirMassa');
-        document.getElementById('countSelecionados').innerText = count;
-
-        if (count > 0) {
-            containerBtn.classList.remove('d-none');
-        } else {
-            containerBtn.classList.add('d-none');
-        }
-    }
-
-    async function excluirSelecionados() {
-        const count = itensSelecionados.size;
-        if (count === 0) return;
-
-        if (confirm(`Tem certeza que deseja EXCLUIR DEFINITIVAMENTE os ${count} registros selecionados?`)) {
-            const indicesParaRemover = Array.from(itensSelecionados).sort((a, b) => b - a);
-
-            if (usarBancoNuvem) {
-                const idsParaDeletar = indicesParaRemover.map(idx => dadosRacks[idx].id).filter(id => id);
-                if (idsParaDeletar.length > 0) {
-                    await _supabase.from('racks').delete().in('id', idsParaDeletar);
-                }
-                itensSelecionados.clear();
-                await inicializarDados();
-            } else {
-                indicesParaRemover.forEach(idx => {
-                    dadosRacks.splice(idx, 1);
-                });
-                itensSelecionados.clear();
-                dadosRacks = ordenarDadosRacks(dadosRacks);
-                await salvarLocal();
-                renderizarRacks();
-                atualizarFiltroSetores();
-                atualizarContadoresSidebar();
-                atualizarListaLateral();
-            }
-            atualizarPainelExclusaoMassa();
-        }
-    }
-
-    function renderizarRacks() {
-        const container = document.getElementById('listaRacks');
-        const filtroTipo = document.getElementById('filtroTipo').value;
-        const filtroSetor = document.getElementById('filtroSetor').value;
-        container.innerHTML = '';
-
-        // Aplica ordenação estritamente alfabética (Setor -> Tag)
-        dadosRacks = ordenarDadosRacks(dadosRacks);
-
-        let filtrados = dadosRacks;
-        if (filtroTipo !== 'TODOS') filtrados = filtrados.filter(r => r.tipo === filtroTipo);
-        if (filtroSetor !== 'TODOS') filtrados = filtrados.filter(r => r.setor === filtroSetor);
-
-        document.getElementById('totalRacks').innerText = filtrados.length;
-
-        if (filtrados.length === 0) {
-            container.innerHTML = `<div class="col-12 text-center py-5 text-muted font-weight-bold">Nenhum equipamento cadastrado nesta categoria.</div>`;
-            return;
-        }
-
-        filtrados.forEach((rack) => {
-            const indexReal = dadosRacks.indexOf(rack);
-            const cor = obterCorDoSwitch(rack.rackId, rack.tipo);
-            const isChecked = itensSelecionados.has(indexReal) ? 'checked' : '';
-
-            container.innerHTML += `
-                <div class="col-xl-4 col-md-6 mb-4 d-flex align-items-stretch">
-                    <div class="card card-dark shadow-sm w-100 overflow-hidden border d-flex flex-column ${isChecked ? 'border-danger' : ''}">
-                        <!-- CABEÇALHO DO CARD COM NOME DO SETOR EM DESTAQUE E FONTE AMPLIADA -->
-                        <div class="p-2 text-white d-flex justify-content-between align-items-center" style="background-color: ${cor.bg};">
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="badge badge-light text-dark font-weight-bold text-uppercase" style="font-size: 0.85rem;">${rack.tipo}</span>
-                                <span class="card-header-setor-title uppercase ml-1">${rack.setor}</span>
+                    <form id="formRegistro">
+                        <input type="hidden" id="editIndex" value="-1">
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label class="font-weight-bold">Tipo de Equipamento *</label>
+                                <select id="inputTipo" class="form-control form-control-dark" required onchange="ajustarCamposPorTipo()">
+                                    <option value="RACK">Rack</option>
+                                    <option value="SWITCH">Switch</option>
+                                    <option value="RUCK">Ruck</option>
+                                </select>
                             </div>
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="text-xs opacity-75">${rack.data}</span>
-                                <input type="checkbox" class="card-checkbox ml-2" ${isChecked} onchange="alternarSelecaoItem(${indexReal}, this)" title="Marcar para seleção/exclusão em massa">
+                            <div class="form-group col-md-4">
+                                <label class="font-weight-bold">Setor / Bloco / Ala *</label>
+                                <input type="text" id="inputSetor" class="form-control form-control-dark" placeholder="Ex: Bloco A - Pavimento 2" required>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label class="font-weight-bold">Identificação / Tag *</label>
+                                <input type="text" id="inputRackId" class="form-control form-control-dark" placeholder="Ex: RACK-01 / SW-CORE" required>
                             </div>
                         </div>
-                        <div class="card-body p-3 d-flex flex-column">
-                            <div class="d-flex justify-content-between align-items-start mb-1">
-                                <h5 class="font-weight-bold text-slate-800 mb-0" onclick="verDetalhe(${indexReal})" style="cursor:pointer;" title="Clique para abrir a visualização completa">
-                                    <a href="javascript:void(0)" class="text-decoration-none text-dark">${rack.rackId}</a>
-                                </h5>
-                                <button onclick="abrirZoomImagemIndex(${indexReal})" class="btn btn-sm btn-light border text-xs font-weight-bold text-primary py-0 px-2" title="Ampliar Pré-visualização">
-                                    <i class="fas fa-search-plus mr-1"></i>Zoom
-                                </button>
-                            </div>
 
-                            <div class="text-xs text-slate-700 mb-2">
-                                <div><strong>Modelo:</strong> ${rack.modelo || 'Não informado'}</div>
-                                <div><strong>Técnico:</strong> ${rack.tecnico || 'Não informado'}</div>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label class="font-weight-bold">Modelo do Equipamento</label>
+                                <input type="text" id="inputModelo" class="form-control form-control-dark" placeholder="Ex: Extreme / Huawei / Cisco">
                             </div>
+                            <div class="form-group col-md-6">
+                                <label class="font-weight-bold">Técnico Responsável</label>
+                                <input type="text" id="inputTecnico" class="form-control form-control-dark" placeholder="Nome do técnico">
+                            </div>
+                        </div>
 
-                            <div class="row no-gutters mb-2">
-                                <div class="col-${rack.tipo === 'RUCK' ? '12' : '6'} p-1">
-                                    <img src="${rack.fotoAntes}" onclick="abrirZoomImagemIndex(${indexReal})" class="img-fluid rounded border img-zoomable" style="height: 110px; width:100%; object-fit: cover;" title="Clique para abrir pré-visualização completa">
+                        <div class="form-group">
+                            <label class="font-weight-bold">Descrição das Atividades / Observações</label>
+                            <textarea id="inputComentarios" class="form-control form-control-dark" rows="3" placeholder="Detalhes da organização, trocas de patch cord, tomadas, etc."></textarea>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label class="font-weight-bold">Foto Antes</label>
+                                <input type="file" id="inputFotoAntes" class="form-control-file" accept="image/*" onchange="previewImage(this, 'imgAntesPreview')">
+                                <div class="mt-2 text-center">
+                                    <img id="imgAntesPreview" src="" class="img-preview d-none">
                                 </div>
-                                ${rack.tipo !== 'RUCK' ? `
-                                <div class="col-6 p-1">
-                                    <img src="${rack.fotoDepois}" onclick="abrirZoomImagemIndex(${indexReal})" class="img-fluid rounded border img-zoomable" style="height: 110px; width:100%; object-fit: cover;" title="Clique para abrir pré-visualização completa">
-                                </div>` : ''}
                             </div>
-
-                            ${rack.comentarios ? `
-                            <div class="box-obs-card mb-2" title="${rack.comentarios}">
-                                <strong>Obs:</strong> ${rack.comentarios}
-                            </div>` : ''}
-
-                            <!-- BOTÕES FIXADOS NA MESMA LINHA NO RODAPÉ DO CARD -->
-                            <div class="d-flex justify-content-between align-items-center card-actions-footer gap-1 flex-nowrap">
-                                <button onclick="verDetalhe(${indexReal})" class="btn btn-azul btn-acao-card">
-                                    <i class="fas fa-eye mr-1"></i>Visualizar
-                                </button>
-                                <button onclick="editarRack(${indexReal})" class="btn btn-amarelo btn-acao-card">
-                                    <i class="fas fa-edit mr-1"></i>Editar
-                                </button>
-                                <button onclick="excluirRack(${indexReal})" class="btn btn-danger btn-acao-card">
-                                    <i class="fas fa-trash mr-1"></i>Excluir
-                                </button>
+                            <div class="form-group col-md-6" id="boxFotoDepois">
+                                <label class="font-weight-bold">Foto Depois</label>
+                                <input type="file" id="inputFotoDepois" class="form-control-file" accept="image/*" onchange="previewImage(this, 'imgDepoisPreview')">
+                                <div class="mt-2 text-center">
+                                    <img id="imgDepoisPreview" src="" class="img-preview d-none">
+                                </div>
                             </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" onclick="salvarRegistro()">Salvar Registro</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Visualização / PDF Individual -->
+    <div class="modal fade" id="modalDetalhes" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title font-weight-bold">Relatório Técnico do Equipamento</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body" id="relatorioDocumento">
+                    <div class="p-3 border rounded bg-white">
+                        <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                            <div>
+                                <small class="text-muted font-weight-bold d-block">MINISTÉRIO DA DEFESA • HOSPITAL DAS FORÇAS ARMADAS</small>
+                                <h4 class="font-weight-bold text-dark mb-0" id="detRackId">REGISTRO-01</h4>
+                            </div>
+                            <div class="text-right">
+                                <span class="badge badge-success px-3 py-2" id="detTipo">RACK</span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-6"><strong>Setor/Ala:</strong> <span id="detSetor">-</span></div>
+                            <div class="col-6"><strong>Modelo:</strong> <span id="detModelo">-</span></div>
+                            <div class="col-6"><strong>Técnico:</strong> <span id="detTecnico">-</span></div>
+                            <div class="col-6"><strong>Data:</strong> <span id="detData">-</span></div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6 text-center mb-2">
+                                <strong class="text-danger d-block mb-1">SITUAÇÃO ANTERIOR (ANTES)</strong>
+                                <img id="detFotoAntes" src="" class="img-fluid border rounded style-max-h">
+                            </div>
+                            <div class="col-md-6 text-center mb-2" id="detBoxFotoDepois">
+                                <strong class="text-success d-block mb-1">SITUAÇÃO ATUAL (DEPOIS)</strong>
+                                <img id="detFotoDepois" src="" class="img-fluid border rounded style-max-h">
+                            </div>
+                        </div>
+
+                        <div class="border p-2 bg-light rounded">
+                            <strong>Observações / Atividades Realizadas:</strong>
+                            <p id="detComentarios" class="mb-0 text-muted mt-1" style="white-space: pre-line;">Sem observações.</p>
                         </div>
                     </div>
                 </div>
-            `;
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-danger" onclick="exportarPDFIndividual()"><i class="fas fa-file-pdf mr-1"></i> Baixar PDF</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Escolha do PDF -->
+    <div class="modal fade" id="modalEscolhaPDF" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title font-weight-bold"><i class="fas fa-file-pdf mr-2"></i>Gerar Relatório em PDF</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <p class="text-muted mb-3">Escolha qual categoria de equipamentos deseja exportar:</p>
+                    <div class="d-flex flex-column gap-2">
+                        <button class="btn btn-outline-dark mb-2 btn-block font-weight-bold" onclick="gerarPDFPorFiltro('TODOS')">
+                            <i class="fas fa-layer-group mr-2"></i> Todos os Equipamentos
+                        </button>
+                        <button class="btn btn-outline-success mb-2 btn-block font-weight-bold" onclick="gerarPDFPorFiltro('SWITCH')">
+                            <i class="fas fa-network-wired mr-2"></i> Apenas Switches
+                        </button>
+                        <button class="btn btn-outline-primary mb-2 btn-block font-weight-bold" onclick="gerarPDFPorFiltro('RACK')">
+                            <i class="fas fa-server mr-2"></i> Apenas Racks
+                        </button>
+                        <button class="btn btn-outline-warning btn-block font-weight-bold" onclick="gerarPDFPorFiltro('RUCK')">
+                            <i class="fas fa-wifi mr-2"></i> Apenas Rucks
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts do Bootstrap / jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Configuração do Supabase
+        const SUPABASE_URL = 'https://jvdpibdorxwotlbxbubh.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_RHLlmxQmAhVMTTnvFB4NFw_GWL0MPsk';
+        
+        let supabaseClient = null;
+        let usandoNuvem = false;
+        let dadosRacks = [];
+
+        // Inicialização
+        $(document).ready(function() {
+            initSupabase();
+            carregarDados();
         });
-    }
 
-    /* COMPRESSÃO AUTOMÁTICA DE IMAGEM */
-    function fileToBase64Compress(file, maxWidth = 1000, quality = 0.7) {
-        return new Promise((resolve) => {
-            if (!file) return resolve('');
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    let w = img.width;
-                    let h = img.height;
+        function initSupabase() {
+            try {
+                if (typeof supabase !== 'undefined' && SUPABASE_URL && SUPABASE_KEY) {
+                    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                    usandoNuvem = true;
+                    atualizarBadgeStatus(true);
+                } else {
+                    atualizarBadgeStatus(false);
+                }
+            } catch (e) {
+                console.warn('Supabase offline ou não configurado, utilizando LocalStorage:', e);
+                atualizarBadgeStatus(false);
+            }
+        }
 
-                    if (w > maxWidth) {
-                        h = Math.round((h * maxWidth) / w);
-                        w = maxWidth;
-                    }
+        function atualizarBadgeStatus(online) {
+            const el = document.getElementById('statusConexao');
+            if (online) {
+                el.className = 'status-badge status-online';
+                el.innerText = '• Nuvem Conectado';
+            } else {
+                el.className = 'status-badge status-offline';
+                el.innerText = '• Armazenamento Local (Offline)';
+            }
+        }
 
-                    canvas.width = w;
-                    canvas.height = h;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, w, h);
-                    resolve(canvas.toDataURL('image/jpeg', quality));
-                };
-                img.onerror = function() { resolve(e.target.result); };
-                img.src = e.target.result;
-            };
-            reader.onerror = function() { resolve(''); };
-            reader.readAsDataURL(file);
-        });
-    }
+        // Carregar Dados (Nuvem / LocalStorage)
+        async function carregarDados() {
+            if (usandoNuvem && supabaseClient) {
+                try {
+                    const { data, error } = await supabaseClient.from('racks').select('*').order('id', { ascending: false });
+                    if (error) throw error;
+                    dadosRacks = data.map(item => ({
+                        id: item.id,
+                        tipo: item.tipo,
+                        setor: item.setor,
+                        rackId: item.rack_id,
+                        modelo: item.modelo || '',
+                        tecnico: item.tecnico || '',
+                        comentarios: item.comentarios || '',
+                        fotoAntes: item.foto_antes || '',
+                        fotoDepois: item.foto_depois || '',
+                        data: new Date(item.created_at || Date.now()).toLocaleDateString('pt-BR')
+                    }));
+                } catch (err) {
+                    console.error('Erro ao buscar dados do Supabase:', err);
+                    usandoNuvem = false;
+                    atualizarBadgeStatus(false);
+                    carregarLocalStorage();
+                }
+            } else {
+                carregarLocalStorage();
+            }
 
-    function editarRack(index) {
-        const item = dadosRacks[index];
-        if (!item) return;
+            atualizarContadores();
+            preencherFiltroSetores();
+            aplicarFiltros();
+        }
 
-        document.getElementById('editIndex').value = index;
-        document.getElementById('editId').value = item.id || "";
-        document.getElementById('inputTipo').value = item.tipo;
-        document.getElementById('inputSetor').value = item.setor;
-        document.getElementById('inputRackId').value = item.rackId;
-        document.getElementById('inputModelo').value = item.modelo !== 'Não informado' ? item.modelo : '';
-        document.getElementById('inputTecnico').value = item.tecnico;
-        document.getElementById('inputComentarios').value = item.comentarios;
+        function carregarLocalStorage() {
+            const salvas = localStorage.getItem('hfa_racks_dados');
+            dadosRacks = salvas ? JSON.parse(salvas) : [];
+        }
 
-        document.getElementById('inputAntes').removeAttribute('required');
-        document.getElementById('inputDepois').removeAttribute('required');
-        document.getElementById('hintAntes').innerText = "Deixe em branco para manter a foto atual.";
-        document.getElementById('hintDepois').innerText = "Deixe em branco para manter a foto atual.";
+        function salvarLocalStorage() {
+            localStorage.setItem('hfa_racks_dados', JSON.stringify(dadosRacks));
+        }
 
-        document.getElementById('modalTitulo').innerText = "Editar Registro - " + item.rackId;
-        document.getElementById('modalHeader').className = "modal-header bg-warning text-white";
+        // Ordenação por Setor e Identificação
+        function ordenarDadosRacks(lista) {
+            return lista.sort((a, b) => {
+                const setorA = (a.setor || '').toLowerCase();
+                const setorB = (b.setor || '').toLowerCase();
+                if (setorA < setorB) return -1;
+                if (setorA > setorB) return 1;
 
-        document.getElementById('inputTipo').dispatchEvent(new Event('change'));
+                const tagA = (a.rackId || '').toLowerCase();
+                const tagB = (b.rackId || '').toLowerCase();
+                return tagA.localeCompare(tagB, undefined, { numeric: true, sensitivity: 'base' });
+            });
+        }
 
-        $('#modalForm').modal('show');
-    }
+        // Atualizar Interface
+        function aplicarFiltros() {
+            const tipo = $('#filtroTipo').val();
+            const setor = $('#filtroSetor').val();
 
-    document.getElementById('formRack').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const btn = document.getElementById('btnSalvar');
-        btn.innerText = 'Processando...';
-        btn.disabled = true;
+            let filtrados = dadosRacks;
 
-        try {
-            const editIndex = parseInt(document.getElementById('editIndex').value);
-            const editId = document.getElementById('editId').value;
-            const tipoSelec = document.getElementById('inputTipo').value;
+            if (tipo !== 'TODOS') filtrados = filtrados.filter(r => r.tipo === tipo);
+            if (setor !== 'TODOS') filtrados = filtrados.filter(r => r.setor === setor);
 
-            const fAntes = document.getElementById('inputAntes').files[0];
-            const fDepois = document.getElementById('inputDepois').files[0];
+            const ordenados = ordenarDadosRacks([...filtrados]);
+            renderizarTabela(ordenados);
+        }
 
-            let fotoAntesBase64 = "";
-            let fotoDepoisBase64 = "";
+        function renderizarTabela(lista) {
+            const tbody = $('#tabelaRacksBody');
+            tbody.empty();
 
-            if (editIndex >= 0) {
-                const registroAntigo = dadosRacks[editIndex];
-                fotoAntesBase64 = fAntes ? await fileToBase64Compress(fAntes) : registroAntigo.fotoAntes;
+            $('#totalMapeado').text(lista.length);
+
+            if (lista.length === 0) {
+                tbody.append(`<tr><td colspan="8" class="text-center py-4 text-muted">Nenhum equipamento cadastrado nesta categoria.</td></tr>`);
+                return;
+            }
+
+            lista.forEach((item) => {
+                const badgeClass = item.tipo === 'SWITCH' ? 'badge-success' : item.tipo === 'RACK' ? 'badge-primary' : 'badge-warning';
                 
-                if (tipoSelec === 'RUCK') {
-                    fotoDepoisBase64 = fotoAntesBase64;
-                } else {
-                    fotoDepoisBase64 = fDepois ? await fileToBase64Compress(fDepois) : registroAntigo.fotoDepois;
-                }
+                tbody.append(`
+                    <tr>
+                        <td class="text-center no-print">
+                            <input type="checkbox" class="checkItem" value="${item.id || item.rackId}">
+                        </td>
+                        <td><span class="badge ${badgeClass} px-2 py-1">${item.tipo}</span></td>
+                        <td class="font-weight-bold text-dark">${item.setor}</td>
+                        <td class="text-primary font-weight-bold">${item.rackId}</td>
+                        <td>${item.modelo || '-'}</td>
+                        <td>${item.tecnico || '-'}</td>
+                        <td><small class="text-muted">${item.data}</small></td>
+                        <td class="text-center no-print">
+                            <button class="btn btn-sm btn-info" onclick="visualizarDetalhes('${item.rackId}')" title="Ver Detalhes"><i class="fas fa-eye"></i></button>
+                            <button class="btn btn-sm btn-danger ml-1" onclick="excluirRegistro(${item.id ? `'${item.id}'` : `'${item.rackId}'`})" title="Excluir"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `);
+            });
+        }
+
+        function atualizarContadores() {
+            $('#countSwitch').text(dadosRacks.filter(r => r.tipo === 'SWITCH').length);
+            $('#countRack').text(dadosRacks.filter(r => r.tipo === 'RACK').length);
+            $('#countRuck').text(dadosRacks.filter(r => r.tipo === 'RUCK').length);
+
+            const ultimos = dadosRacks.slice(0, 5);
+            const elRecentes = $('#listaRecentes');
+            elRecentes.empty();
+
+            if (ultimos.length === 0) {
+                elRecentes.append('<p class="mb-0">Nenhum item cadastrado.</p>');
             } else {
-                fotoAntesBase64 = fAntes ? await fileToBase64Compress(fAntes) : '';
-                fotoDepoisBase64 = (tipoSelec !== 'RUCK' && fDepois) ? await fileToBase64Compress(fDepois) : fotoAntesBase64;
+                ultimos.forEach(u => {
+                    elRecentes.append(`<div class="mb-1"><strong>${u.rackId}</strong> - <small>${u.setor}</small></div>`);
+                });
+            }
+        }
+
+        function preencherFiltroSetores() {
+            const setores = [...new Set(dadosRacks.map(r => r.setor))].sort();
+            const select = $('#filtroSetor');
+            select.html('<option value="TODOS">Todos os Setores</option>');
+            setores.forEach(s => {
+                select.append(`<option value="${s}">${s}</option>`);
+            });
+        }
+
+        function filtrarCategoria(cat) {
+            $('#filtroTipo').val(cat);
+            aplicarFiltros();
+        }
+
+        // Modais e Imagens
+        function abrirModalNovo() {
+            $('#formRegistro')[0].reset();
+            $('#editIndex').val('-1');
+            $('#imgAntesPreview, #imgDepoisPreview').attr('src', '').addClass('d-none');
+            $('#modalTitulo').text('Novo Registro de Infraestrutura');
+            ajustarCamposPorTipo();
+            $('#modalRegistro').modal('show');
+        }
+
+        function ajustarCamposPorTipo() {
+            const tipo = $('#inputTipo').val();
+            if (tipo === 'RUCK') {
+                $('#boxFotoDepois').hide();
+            } else {
+                $('#boxFotoDepois').show();
+            }
+        }
+
+        function previewImage(input, targetId) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    $(`#${targetId}`).attr('src', e.target.result).removeClass('d-none');
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Salvar / Excluir
+        async function salvarRegistro() {
+            const tipo = $('#inputTipo').val();
+            const setor = $('#inputSetor').val().trim();
+            const rackId = $('#inputRackId').val().trim();
+            const modelo = $('#inputModelo').val().trim();
+            const tecnico = $('#inputTecnico').val().trim();
+            const comentarios = $('#inputComentarios').val().trim();
+
+            if (!setor || !rackId) {
+                alert('Por favor, preencha os campos obrigatórios (Setor e Identificação).');
+                return;
             }
 
-            const registroDados = {
-                tipo: tipoSelec,
-                setor: document.getElementById('inputSetor').value,
-                rackId: document.getElementById('inputRackId').value,
-                modelo: document.getElementById('inputModelo').value || 'Não informado',
-                tecnico: document.getElementById('inputTecnico').value,
-                comentarios: document.getElementById('inputComentarios').value,
-                data: editIndex >= 0 ? dadosRacks[editIndex].data : new Date().toLocaleDateString('pt-BR'),
-                fotoAntes: fotoAntesBase64,
-                fotoDepois: fotoDepoisBase64
-            };
+            const fotoAntes = $('#imgAntesPreview').attr('src') || '';
+            const fotoDepois = tipo !== 'RUCK' ? ($('#imgDepoisPreview').attr('src') || '') : '';
 
-            if (usarBancoNuvem) {
-                if (editIndex >= 0 && editId) {
-                    const { error } = await _supabase.from('racks').update({
-                        tipo: registroDados.tipo,
-                        setor: registroDados.setor,
-                        rack_id: registroDados.rackId,
-                        modelo: registroDados.modelo,
-                        tecnico: registroDados.tecnico,
-                        comentarios: registroDados.comentarios,
-                        foto_antes: registroDados.fotoAntes,
-                        foto_depois: registroDados.fotoDepois
-                    }).eq('id', editId);
-                    
-                    if (error) throw error;
-                } else {
-                    const { error } = await _supabase.from('racks').insert([{
-                        tipo: registroDados.tipo,
-                        setor: registroDados.setor,
-                        rack_id: registroDados.rackId,
-                        modelo: registroDados.modelo,
-                        tecnico: registroDados.tecnico,
-                        comentarios: registroDados.comentarios,
-                        foto_antes: registroDados.fotoAntes,
-                        foto_depois: registroDados.fotoDepois
+            if (usandoNuvem && supabaseClient) {
+                try {
+                    const { error } = await supabaseClient.from('racks').insert([{
+                        tipo, setor, rack_id: rackId, modelo, tecnico, comentarios,
+                        foto_antes: fotoAntes, foto_depois: fotoDepois
                     }]);
-
                     if (error) throw error;
+                } catch (err) {
+                    alert('Erro ao salvar no Supabase. O registro será salvo localmente.');
+                    console.error(err);
                 }
-                await inicializarDados();
-            } else {
-                if (editIndex >= 0) {
-                    dadosRacks[editIndex] = { ...registroDados, id: editId };
-                } else {
-                    dadosRacks.unshift(registroDados);
-                }
-                dadosRacks = ordenarDadosRacks(dadosRacks);
-                await salvarLocal();
-                renderizarRacks();
-                atualizarFiltroSetores();
-                atualizarContadoresSidebar();
-                atualizarListaLateral();
             }
 
-            fecharModal();
-            this.reset();
-        } catch (error) {
-            console.error("Erro ao salvar registro:", error);
-            alert("Erro ao salvar no Supabase: " + (error.message || "Verifique se a tabela 'racks' foi criada corretamente no SQL Editor."));
-        } finally {
-            btn.innerText = 'Salvar Registro';
-            btn.disabled = false;
-        }
-    });
-
-    function verDetalhe(index) {
-        const rackAtual = dadosRacks[index];
-        document.getElementById('detTipo').innerText = rackAtual.tipo;
-        document.getElementById('detSetor').innerText = rackAtual.setor;
-        document.getElementById('detRackId').innerText = rackAtual.rackId;
-        document.getElementById('detModelo').innerText = rackAtual.modelo || 'Não informado';
-        document.getElementById('detTecnico').innerText = rackAtual.tecnico || 'Não informado';
-        document.getElementById('detData').innerText = 'Data: ' + rackAtual.data;
-        document.getElementById('detComentarios').innerText = rackAtual.comentarios || 'Nenhuma observação cadastrada.';
-        
-        document.getElementById('detImgAntes').src = rackAtual.fotoAntes;
-        document.getElementById('detImgAntes').onclick = () => abrirZoomImagemIndex(index);
-
-        if (rackAtual.tipo === 'RUCK') {
-            document.getElementById('boxDetDepois').classList.add('d-none');
-            document.getElementById('boxDetAntes').className = 'col-12 text-center';
-        } else {
-            document.getElementById('boxDetDepois').classList.remove('d-none');
-            document.getElementById('boxDetAntes').className = 'col-md-6 text-center mb-3 mb-md-0';
-            document.getElementById('detImgDepois').src = rackAtual.fotoDepois;
-            document.getElementById('detImgDepois').onclick = () => abrirZoomImagemIndex(index);
-        }
-
-        document.getElementById('listaRacks').classList.add('d-none');
-        document.getElementById('areaDetalhe').classList.remove('d-none');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function fecharDetalhe() {
-        document.getElementById('areaDetalhe').classList.add('d-none');
-        document.getElementById('listaRacks').classList.remove('d-none');
-    }
-
-    function exportarPDFIndividual() {
-        const element = document.getElementById('relatorioDocumento');
-        const rackId = document.getElementById('detRackId').innerText;
-        
-        const opt = {
-            margin:       [10, 10, 10, 10],
-            filename:     `Relatorio_Tecnico_HFA_${rackId}.pdf`,
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true, logging: false },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-
-        html2pdf().set(opt).from(element).save();
-    }
-
-    function gerarPDFPorFiltro(tipoSelecionado) {
-        fecharModalSelecaoPDF();
-
-        let filtrados = dadosRacks;
-        if (tipoSelecionado !== 'TODOS') {
-            filtrados = dadosRacks.filter(r => r.tipo === tipoSelecionado);
-        }
-
-        if (filtrados.length === 0) {
-            alert('Nenhum registro encontrado para a categoria selecionada.');
-            return;
-        }
-
-        const dadosOrdenados = ordenarDadosRacks([...filtrados]);
-
-        let paginasHTML = '';
-
-        dadosOrdenados.forEach((rack, index) => {
-            paginasHTML += `
-              <div style="padding: 20px; background: white; color: black; page-break-after: always;">
-                <div style="border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 15px; display: flex; justify-content: space-between;">
-                  <div>
-                    <span style="font-size: 10px; font-weight: bold; color: #666;">MINISTÉRIO DA DEFESA • HOSPITAL DAS FORÇAS ARMADAS</span>
-                    <h3 style="font-size: 16px; margin: 0; font-weight: bold;">RELATÓRIO TÉCNICO DE INFRAESTRUTURA (${index + 1}/${dadosOrdenados.length})</h3>
-                    <span style="font-size: 12px; color: #444;">Categoria: ${tipoSelecionado}</span>
-                  </div>
-                  <div style="text-align: right;">
-                    <span style="font-size: 12px; font-weight: bold;">Data: ${rack.data}</span>
-                  </div>
-                </div>
-
-                <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 12px; background: #f8f9fa;">
-                  <tr>
-                    <td style="padding: 8px; border: 1px solid #ddd;"><b>Tipo:</b> ${rack.tipo}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd;"><b>Setor:</b> ${rack.setor}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd;"><b>Identificação:</b> ${rack.rackId}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 8px; border: 1px solid #ddd;"><b>Modelo:</b> ${rack.modelo}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd;" colspan="2"><b>Técnico:</b> ${rack.tecnico}</td>
-                  </tr>
-                </table>
-
-                <div style="display: flex; gap: 15px; margin-bottom: 15px;">
-                  <div style="flex: 1; text-align: center; border: 1px solid #ddd; padding: 5px;">
-                    <b style="color: #dc3545; font-size: 12px;">SITUAÇÃO ANTERIOR (ANTES)</b><br>
-                    <img src="${rack.fotoAntes}" style="max-width: 100%; max-height: 200px; object-fit: contain; margin-top: 5px;">
-                  </div>
-                  ${rack.tipo !== 'RUCK' ? `
-                  <div style="flex: 1; text-align: center; border: 1px solid #ddd; padding: 5px;">
-                    <b style="color: #198754; font-size: 12px;">SITUAÇÃO ATUAL (DEPOIS)</b><br>
-                    <img src="${rack.fotoDepois}" style="max-width: 100%; max-height: 200px; object-fit: contain; margin-top: 5px;">
-                  </div>` : ''}
-                </div>
-
-                <div style="border: 1px solid #ddd; padding: 10px; margin-bottom: 20px; font-size: 12px; background: #f8f9fa;">
-                  <b>Descrição das Atividades:</b>
-                  <p style="margin: 5px 0 0 0; white-space: pre-line;">${rack.comentarios || 'Sem observações.'}</p>
-                </div>
-              </div>
-            `;
-        });
-
-        const containerTemp = document.createElement('div');
-        containerTemp.innerHTML = paginasHTML;
-
-        const opt = {
-            margin:       [5, 5, 5, 5],
-            filename:     `Relatorio_${tipoSelecionado}_HFA_${new Date().toISOString().slice(0, 10)}.pdf`,
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-
-        html2pdf().set(opt).from(containerTemp).save();
-    }
-
-    async function excluirRack(index) {
-        if (confirm('Tem certeza que deseja remover este registro?')) {
-            const rack = dadosRacks[index];
-            if (usarBancoNuvem && rack.id) {
-                await _supabase.from('racks').delete().eq('id', rack.id);
-                await inicializarDados();
-            } else {
-                dadosRacks.splice(index, 1);
-                dadosRacks = ordenarDadosRacks(dadosRacks);
-                await salvarLocal();
-                renderizarRacks();
-                atualizarFiltroSetores();
-                atualizarContadoresSidebar();
-                atualizarListaLateral();
-            }
-        }
-    }
-
-    /* EXPORTAÇÃO EXCEL PROFISSIONAL COM FOTOS EMBUTIDAS (EXCELJS) */
-    async function exportarParaExcel() {
-        if (dadosRacks.length === 0) { 
-            alert('Nenhum dado cadastrado para exportar.'); 
-            return; 
-        }
-
-        const btn = document.querySelector('button[onclick="exportarParaExcel()"]');
-        const textoOriginal = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Gerando...';
-        btn.disabled = true;
-
-        try {
-            const dadosOrdenados = ordenarDadosRacks([...dadosRacks]);
-
-            // Cria o arquivo de trabalho
-            const workbook = new ExcelJS.Workbook();
-            workbook.creator = 'HFA TI';
-            workbook.created = new Date();
-            const worksheet = workbook.addWorksheet('INVENTÁRIO HFA');
-
-            // Totais para o Resumo Executivo
-            const totalGeral = dadosOrdenados.length;
-            const totalSwitches = dadosOrdenados.filter(r => r.tipo === 'SWITCH').length;
-            const totalRacks = dadosOrdenados.filter(r => r.tipo === 'RACK').length;
-            const totalRucks = dadosOrdenados.filter(r => r.tipo === 'RUCK').length;
-            const dataEmissao = new Date().toLocaleDateString('pt-BR');
-
-            // 1. Cabeçalho Institucional
-            worksheet.addRow(["MINISTÉRIO DA DEFESA - HOSPITAL DAS FORÇAS ARMADAS"]).font = { bold: true, size: 13 };
-            worksheet.addRow(["DIRETORIA DE TI - GESTÃO DE INFRAESTRUTURA DE REDE"]).font = { bold: true, size: 11 };
-            worksheet.addRow([`RELATÓRIO CONSOLIDADO DE INVENTÁRIO - EMITIDO EM: ${dataEmissao}`]).font = { size: 10 };
-            worksheet.addRow([]);
-            
-            // 2. Painel de Indicadores (KPIs)
-            worksheet.addRow(["RESUMO EXECUTIVO DE EQUIPAMENTOS"]).font = { bold: true };
-            worksheet.addRow(["TOTAL SWITCHES", "TOTAL RACKS", "TOTAL RUCKS", "TOTAL GERAL"]).font = { bold: true };
-            worksheet.addRow([totalSwitches, totalRacks, totalRucks, totalGeral]);
-            worksheet.addRow([]);
-
-            // Mesclagem de títulos
-            worksheet.mergeCells('A1:I1');
-            worksheet.mergeCells('A2:I2');
-            worksheet.mergeCells('A3:I3');
-            worksheet.mergeCells('A5:D5');
-
-            // 3. Cabeçalho da Tabela Principal
-            const headerRow = worksheet.addRow([
-                "TIPO", "SETOR / BLOCO / ALA", "IDENTIFICAÇÃO / TAG", "MODELO / MARCA", 
-                "TÉCNICO", "DATA", "OBSERVAÇÕES / SERVIÇOS", "FOTO ANTES", "FOTO DEPOIS"
-            ]);
-            headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-            headerRow.eachCell(cell => {
-                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF065F46' } };
-                cell.alignment = { vertical: 'middle', horizontal: 'center' };
+            // Atualiza memória local
+            dadosRacks.unshift({
+                tipo, setor, rackId, modelo, tecnico, comentarios,
+                fotoAntes, fotoDepois, data: new Date().toLocaleDateString('pt-BR')
             });
 
-            // 4. Configuração das Colunas
+            salvarLocalStorage();
+            $('#modalRegistro').modal('hide');
+            carregarDados();
+        }
+
+        async function excluirRegistro(idOrTag) {
+            if (!confirm('Deseja realmente excluir este registro?')) return;
+
+            if (usandoNuvem && supabaseClient) {
+                try {
+                    await supabaseClient.from('racks').delete().eq('id', idOrTag);
+                } catch (e) {
+                    console.error(e);
+                }
+            }
+
+            dadosRacks = dadosRacks.filter(r => (r.id ? r.id != idOrTag : r.rackId != idOrTag));
+            salvarLocalStorage();
+            carregarDados();
+        }
+
+        // Detalhes & Exportação PDF Individual
+        function visualizarDetalhes(rackId) {
+            const item = dadosRacks.find(r => r.rackId === rackId);
+            if (!item) return;
+
+            $('#detRackId').text(item.rackId);
+            $('#detTipo').text(item.tipo);
+            $('#detSetor').text(item.setor);
+            $('#detModelo').text(item.modelo || '-');
+            $('#detTecnico').text(item.tecnico || '-');
+            $('#detData').text(item.data);
+            $('#detComentarios').text(item.comentarios || 'Sem observações.');
+
+            if (item.fotoAntes) {
+                $('#detFotoAntes').attr('src', item.fotoAntes).show();
+            } else {
+                $('#detFotoAntes').hide();
+            }
+
+            if (item.tipo !== 'RUCK' && item.fotoDepois) {
+                $('#detFotoDepois').attr('src', item.fotoDepois);
+                $('#detBoxFotoDepois').show();
+            } else {
+                $('#detBoxFotoDepois').hide();
+            }
+
+            $('#modalDetalhes').modal('show');
+        }
+
+        function exportarPDFIndividual() {
+            const element = document.getElementById('relatorioDocumento');
+            const rackId = document.getElementById('detRackId').innerText;
+            
+            const opt = {
+                margin:       [10, 10, 10, 10],
+                filename:     `Relatorio_Tecnico_HFA_${rackId}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, logging: false },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save();
+        }
+
+        // Modais de Seleção de PDF por Categoria
+        function abrirModalSelecaoPDF() {
+            $('#modalEscolhaPDF').modal('show');
+        }
+
+        function fecharModalSelecaoPDF() {
+            $('#modalEscolhaPDF').modal('hide');
+        }
+
+        // GERAÇÃO DE PDF COMPLETA (CORRIGIDO: Inserção no DOM evitada em branco)
+        async function gerarPDFPorFiltro(tipoSelecionado) {
+            fecharModalSelecaoPDF();
+
+            let filtrados = dadosRacks;
+            if (tipoSelecionado !== 'TODOS') {
+                filtrados = dadosRacks.filter(r => r.tipo === tipoSelecionado);
+            }
+
+            if (filtrados.length === 0) {
+                alert('Nenhum registro encontrado para a categoria selecionada.');
+                return;
+            }
+
+            const dadosOrdenados = ordenarDadosRacks([...filtrados]);
+
+            let paginasHTML = '';
+
+            dadosOrdenados.forEach((rack, index) => {
+                paginasHTML += `
+                  <div style="padding: 20px; background: white; color: black; page-break-after: always; width: 100%;">
+                    <div style="border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 15px; display: flex; justify-content: space-between;">
+                      <div>
+                        <span style="font-size: 10px; font-weight: bold; color: #666;">MINISTÉRIO DA DEFESA • HOSPITAL DAS FORÇAS ARMADAS</span>
+                        <h3 style="font-size: 16px; margin: 0; font-weight: bold;">RELATÓRIO TÉCNICO DE INFRAESTRUTURA (${index + 1}/${dadosOrdenados.length})</h3>
+                        <span style="font-size: 12px; color: #444;">Categoria: ${tipoSelecionado}</span>
+                      </div>
+                      <div style="text-align: right;">
+                        <span style="font-size: 12px; font-weight: bold;">Data: ${rack.data}</span>
+                      </div>
+                    </div>
+
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 12px; background: #f8f9fa;">
+                      <tr>
+                        <td style="padding: 8px; border: 1px solid #ddd;"><b>Tipo:</b> ${rack.tipo}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;"><b>Setor:</b> ${rack.setor}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;"><b>Identificação:</b> ${rack.rackId}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px; border: 1px solid #ddd;"><b>Modelo:</b> ${rack.modelo || '-'}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;" colspan="2"><b>Técnico:</b> ${rack.tecnico || '-'}</td>
+                      </tr>
+                    </table>
+
+                    <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                      <div style="flex: 1; text-align: center; border: 1px solid #ddd; padding: 5px;">
+                        <b style="color: #dc3545; font-size: 12px;">SITUAÇÃO ANTERIOR (ANTES)</b><br>
+                        ${rack.fotoAntes ? `<img src="${rack.fotoAntes}" style="max-width: 100%; max-height: 220px; object-fit: contain; margin-top: 5px;">` : '<p style="color:#aaa; font-size:11px;">Sem Foto</p>'}
+                      </div>
+                      ${rack.tipo !== 'RUCK' ? `
+                      <div style="flex: 1; text-align: center; border: 1px solid #ddd; padding: 5px;">
+                        <b style="color: #198754; font-size: 12px;">SITUAÇÃO ATUAL (DEPOIS)</b><br>
+                        ${rack.fotoDepois ? `<img src="${rack.fotoDepois}" style="max-width: 100%; max-height: 220px; object-fit: contain; margin-top: 5px;">` : '<p style="color:#aaa; font-size:11px;">Sem Foto</p>'}
+                      </div>` : ''}
+                    </div>
+
+                    <div style="border: 1px solid #ddd; padding: 10px; margin-bottom: 20px; font-size: 12px; background: #f8f9fa;">
+                      <b>Descrição das Atividades:</b>
+                      <p style="margin: 5px 0 0 0; white-space: pre-line;">${rack.comentarios || 'Sem observações.'}</p>
+                    </div>
+                  </div>
+                `;
+            });
+
+            // Elemento temporário anexado ao DOM para renderização perfeita
+            const containerTemp = document.createElement('div');
+            containerTemp.style.position = 'absolute';
+            containerTemp.style.left = '-9999px';
+            containerTemp.style.top = '0px';
+            containerTemp.style.width = '750px';
+            containerTemp.innerHTML = paginasHTML;
+            document.body.appendChild(containerTemp);
+
+            const opt = {
+                margin:       [5, 5, 5, 5],
+                filename:     `Relatorio_${tipoSelecionado}_HFA_${new Date().toISOString().slice(0, 10)}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, logging: false },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            try {
+                await html2pdf().set(opt).from(containerTemp).save();
+            } catch (err) {
+                console.error('Erro ao gerar PDF:', err);
+                alert('Erro ao gerar PDF. Verifique se todas as imagens estão acessíveis.');
+            } finally {
+                document.body.removeChild(containerTemp);
+            }
+        }
+
+        // Exportação para Excel
+        async function exportarExcel() {
+            if (dadosRacks.length === 0) {
+                alert('Não há dados cadastrados para exportar.');
+                return;
+            }
+
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet('Infraestrutura HFA');
+
             worksheet.columns = [
-                { width: 14 }, // Tipo
-                { width: 28 }, // Setor
-                { width: 22 }, // Identificação
-                { width: 22 }, // Modelo
-                { width: 22 }, // Técnico
-                { width: 14 }, // Data
-                { width: 45 }, // Observações
-                { width: 32 }, // Foto Antes
-                { width: 32 }  // Foto Depois
+                { header: 'Tipo', key: 'tipo', width: 12 },
+                { header: 'Setor / Bloco', key: 'setor', width: 25 },
+                { header: 'Identificação', key: 'rackId', width: 20 },
+                { header: 'Modelo', key: 'modelo', width: 20 },
+                { header: 'Técnico', key: 'tecnico', width: 20 },
+                { header: 'Data', key: 'data', width: 15 },
+                { header: 'Observações', key: 'comentarios', width: 35 }
             ];
 
-            // 5. Inserção dos Dados e Imagens
-            dadosOrdenados.forEach((r, index) => {
-                const rowIndex = 10 + index;
-                const row = worksheet.addRow([
-                    (r.tipo || '').toUpperCase(),
-                    (r.setor || '').toUpperCase(),
-                    (r.rackId || '').toUpperCase(),
-                    (r.modelo || 'NÃO INFORMADO').toUpperCase(),
-                    (r.tecnico || 'NÃO INFORMADO').toUpperCase(),
-                    (r.data || '').toUpperCase(),
-                    (r.comentarios || 'SEM OBSERVAÇÕES').toUpperCase()
-                ]);
+            const ordenados = ordenarDadosRacks([...dadosRacks]);
 
-                row.height = 125;
-                row.alignment = { vertical: 'middle', wrapText: true };
-
-                const anexarFotoExcel = (base64String, colIndex) => {
-                    if (base64String && base64String.includes('base64,')) {
-                        const base64Clean = base64String.split(',')[1];
-                        let ext = 'png';
-                        if (base64String.includes('image/jpeg') || base64String.includes('image/jpg')) ext = 'jpeg';
-
-                        const imageId = workbook.addImage({
-                            base64: base64Clean,
-                            extension: ext,
-                        });
-
-                        worksheet.addImage(imageId, {
-                            tl: { col: colIndex, row: rowIndex - 1 },
-                            ext: { width: 210, height: 150 }
-                        });
-                    }
-                };
-
-                anexarFotoExcel(r.fotoAntes, 7);
-
-                if (r.tipo !== 'RUCK') {
-                    anexarFotoExcel(r.fotoDepois, 8);
-                }
+            ordenados.forEach(item => {
+                worksheet.addRow({
+                    tipo: item.tipo,
+                    setor: item.setor,
+                    rackId: item.rackId,
+                    modelo: item.modelo || '-',
+                    tecnico: item.tecnico || '-',
+                    data: item.data,
+                    comentarios: item.comentarios || '-'
+                });
             });
 
-            // 6. Download do Arquivo Gerado
+            worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFF' } };
+            worksheet.getRow(1).fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: '065F46' }
+            };
+
             const buffer = await workbook.xlsx.writeBuffer();
-            saveAs(new Blob([buffer]), `RELATORIO_INFRAESTRUTURA_HFA_${new Date().toISOString().slice(0, 10)}.xlsx`);
-
-        } catch (error) {
-            console.error("Erro ao gerar Excel:", error);
-            alert('Erro ao gerar a planilha com fotos. Verifique as fotos cadastradas.');
-        } finally {
-            btn.innerHTML = textoOriginal;
-            btn.disabled = false;
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            saveAs(blob, `Documentacao_Infraestrutura_HFA_${new Date().toISOString().slice(0, 10)}.xlsx`);
         }
-    }
 
-    document.getElementById('inputTipo').addEventListener('change', function() {
-        const tipo = this.value;
-        if (tipo === 'RUCK') {
-            document.getElementById('containerFotoDepois').classList.add('d-none');
-            document.getElementById('inputDepois').removeAttribute('required');
-            document.getElementById('labelFotoAntes').innerText = 'Foto do Equipamento (Ruck)';
-        } else {
-            document.getElementById('containerFotoDepois').classList.remove('d-none');
-            document.getElementById('labelFotoAntes').innerText = 'Foto ANTES';
+        // Seleção Múltipla
+        function toggleSelectAll(master) {
+            $('.checkItem').prop('checked', master.checked);
         }
-    });
 
-    $(document).ready(function() {
-        inicializarDados();
-    });
-</script>
+        function selecionarTodosParaAcao() {
+            const checkMaster = document.getElementById('checkAll');
+            checkMaster.checked = !checkMaster.checked;
+            toggleSelectAll(checkMaster);
+        }
+    </script>
+</body>
+</html>
